@@ -1,5 +1,32 @@
 {
-  "anytime" : [
-    ">> Started.."
-  ]
+    "anytime" : [
+        "오늘이 가장 기쁜 날"
+    ],
+    "morning" : [
+        "Good morning, sunshine!",
+        "Who needs coffee when you have your smile?",
+        "좋은 아침"
+    ],
+    "afternoon" : [
+        "You are making a difference!",
+        "즐거운 오후"
+    ],
+    "evening" : [
+        "You made someone smile today, I know it.",
+        "The day was better for your efforts.",
+        "좋은 하루였어"
+    ],
+  	"....-01-01": [
+			"Happy new year!"
+		],
+  	"day_sunny": [
+			"Today is a sunny day",
+			"It's a beautiful day"
+		],
+		"snow": [
+			"Snowball battle!"
+		],
+		"rain": [
+			"Don't forget your umbrella"
+		]
 }
