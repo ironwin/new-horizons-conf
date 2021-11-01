@@ -16,17 +16,17 @@
         "The day was better for your efforts.",
         "좋은 하루였어"
     ],
-  	"....-01-01": [
-			"Happy new year!"
-		],
-  	"day_sunny": [
-			"Today is a sunny day",
-			"It's a beautiful day"
-		],
-		"snow": [
-			"Snowball battle!"
-		],
-		"rain": [
-			"Don't forget your umbrella"
-		]
+    "....-01-01": [
+        "Happy new year!"
+    ],
+    "day_sunny": [
+        "Today is a sunny day",
+        "It's a beautiful day"
+    ],
+    "snow": [
+        "Snowball battle!"
+    ],
+    "rain": [
+        "Don't forget your umbrella"
+    ]
 }
