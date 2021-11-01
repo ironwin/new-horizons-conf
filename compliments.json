@@ -1,15 +1,15 @@
 {
     "anytime" : [
-        "오늘을 기억해"
+        "Today is.."
     ],
     "morning" : [
-        "좋은 아침, 오늘도 웃어"
+        "Good morning"
     ],
     "afternoon" : [
-        "좋은 하루를 만들어, "
+        "Good afternoon "
     ],
     "evening" : [
-        "좋은 하루였어"
+        "Good evening"
     ],
     "....-01-01": [
         "Happy new year!"
