@@ -1,19 +1,14 @@
 {
     "anytime" : [
-        "오늘이 가장 기쁜 날"
+        "오늘을 기억해"
     ],
     "morning" : [
-        "Good morning, sunshine!",
-        "Who needs coffee when you have your smile?",
-        "좋은 아침"
+        "좋은 아침, 오늘도 웃어"
     ],
     "afternoon" : [
-        "You are making a difference!",
-        "즐거운 오후"
+        "좋은 하루를 만들어, "
     ],
     "evening" : [
-        "You made someone smile today, I know it.",
-        "The day was better for your efforts.",
         "좋은 하루였어"
     ],
     "....-01-01": [
