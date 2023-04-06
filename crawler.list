@@ -2,7 +2,7 @@
 hyundai, 005380, gt, 230000, price
 hyundai, 005380, lt, 160000, price
 kia, 000270, lt, 65000, price
-#posco, 005490, gt, 300000, price
+posco, 005490, lt, 300000, price
 kakao, 035720, gt, 80000, price
 cjenm, 035760, gt, 110000, price
 #lges, 373220, gt, 500000, price
