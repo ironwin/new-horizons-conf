@@ -1,11 +1,11 @@
 # upload github. git pull test
 hyundai, 005380, gt, 230000, price
-kia, 000270, lt, 65000, price
-posco, 005490, lt, 390000, price
+#kia, 000270, lt, 65000, price
+#posco, 005490, lt, 390000, price
 kakao, 035720, gt, 80000, price
-cjenm, 035760, gt, 110000, price
+#cjenm, 035760, gt, 110000, price
 samsung, 005930, gt, 77000, price
-hynix, 000660, lt, 100000, price
+#hynix, 000660, lt, 100000, price
 #hyundai, 005380, lt, 160000, price
 #lges, 373220, gt, 500000, price
 #krafton, 259960, gt, 600000, price
