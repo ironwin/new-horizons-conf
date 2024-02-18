@@ -30,3 +30,4 @@ cp ${conf_path} ${last_conf}
 sed -i "s/@ALBUM@/${ALB}/g" ${last_conf}
 
 cp ${last_conf} ${mgcf_path}
+rm /home/pi/MagicMirror/modules/MMM-GooglePhotos/cache/*
