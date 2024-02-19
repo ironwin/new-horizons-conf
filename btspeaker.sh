@@ -1,14 +1,15 @@
 #!/bin/bash
 
 BTSP="67:24:34:34:CE:48"
-
+BTLT="/tmp/bt.list"
 bluetoothctl remove ${BTSP}
 
-bluetoothctl scan on > ./bt.list &
+echo 
+stdbuf -oL bluetoothctl scan on > ${BTLT} &
 pid=$!
 
 check_speaker() {
-    grep -q $BTSP ./bt.list
+    grep -q $BTSP ${BTLT}
 }
 
 # Wait for 30 seconds or until speaker is found
@@ -17,13 +18,14 @@ count=1
 
 while [ $count -lt $WAIT ]; do
     if check_speaker; then
-        echo "Speaker found! Exiting..."
-        break
+        logger "Speaker found! Exiting..."
+        bluetoothctl connect ${BTSP}
+        exit 0
     fi
     sleep 1
     ((count++))
 done
 kill $pid
 
-bluetoothctl connect ${BTSP}
+logger "Speaker not found! ${BTS}"
 
