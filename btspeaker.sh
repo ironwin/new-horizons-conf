@@ -4,7 +4,7 @@ BTSP="67:24:34:34:CE:48"
 BTLT="/tmp/bt.list"
 bluetoothctl remove ${BTSP}
 
-echo 
+cat /dev/null > ${BTLT}
 stdbuf -oL bluetoothctl scan on > ${BTLT} &
 pid=$!
 
