@@ -142,23 +142,7 @@ let config = {
 					CLIENT_ID: null
 				}
 			}
-		},		
-        {
-            module: 'EXT-Volume',
-            config: {
-                debug: false,
-                startSpeakerVolume: 100,
-                startRecorderVolume: 50,
-                syncVolume: false
-            }
-        },
-        {
-            module: 'EXT-Alert',
-            config: {
-                debug: false,
-                ignore: []
-            }
-        },
+		}	
 	]
 };
 
