@@ -34,7 +34,7 @@ reg_speaker() {
   # scan on for $1 min
   stdbuf -oL bluetoothctl --timeout $1 scan on > ${BTLT} 
 
-  if !check_speaker; then
+  if check_speaker; then
       logger "no ${BTSP} in ${BTLT}"
   else
       bluetoothctl connect ${BTSP}
