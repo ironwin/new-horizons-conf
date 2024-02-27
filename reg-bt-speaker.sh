@@ -35,12 +35,11 @@ reg_speaker() {
   stdbuf -oL bluetoothctl --timeout $1 scan on > ${BTLT} 
 
   if check_speaker; then
-      logger "no ${BTSP} in ${BTLT}"
-  else
       bluetoothctl connect ${BTSP}
       logger "success register bluetooth speaker ${BLSP}"
       return 0
-  fi 
+  fi
+  logger "no ${BTSP} in ${BTLT}"
   return 1
 }
 
@@ -48,15 +47,20 @@ reg_speaker() {
 WTIME=300
 for ((i=0; i<WTIME; i++)); do
     if check_bluetooth_service; then
-        logger "wait bluetooth service active $i/$WTIME"
-    else
         reg_speaker 180
         exit 0
     fi
+    logger "wait bluetooth service active $i/$WTIME"
     sleep 1
 done
 
 logger "timeout wait bluetooth service active"
+
+# final try 
+if check_bluetooth_service; then
+   reg_speaker 300
+fi
+
 
 
 
