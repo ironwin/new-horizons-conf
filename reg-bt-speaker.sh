@@ -48,7 +48,6 @@ WTIME=300
 for ((i=0; i<WTIME; i++)); do
     if check_bluetooth_service; then
         reg_speaker 180
-        exit 0
     fi
     logger "wait bluetooth service active $i/$WTIME"
     sleep 1
