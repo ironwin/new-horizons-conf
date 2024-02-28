@@ -16,7 +16,7 @@ check_speaker() {
   grep -q ${BTSP} ${BTLT}
 }
 
-check_paried() {
+check_paired() {
   bluetoothctl paired-devices | grep ${BTSP}
   return $?
 }
@@ -57,7 +57,7 @@ done
 logger "timeout wait bluetooth service active"
 
 # final try 
-if check_bluetooth_service; then
+if check_paired; then
    reg_speaker 300
 fi
 
