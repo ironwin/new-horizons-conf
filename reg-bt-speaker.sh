@@ -1,7 +1,6 @@
 #!/bin/bash
 
 BTSP="67:24:34:34:CE:48"
-BTLT="/tmp/bts.list"
 
 
 # $? : 0 [success]
@@ -13,7 +12,8 @@ check_bluetooth_service() {
 }
 
 check_speaker() {
-  grep -q ${BTSP} ${BTLT}
+  bluetoothctl devices | grep ${BTSP}
+  return $?
 }
 
 check_paired() {
@@ -24,9 +24,6 @@ check_paired() {
 reg_speaker() {
 
   logger "regist bluetooth speeker ${BTSP}"
-
-  # truncate list
-  cat /dev/null > ${BTLT}
 
   # remove first 
   bluetoothctl remove ${BTSP}
@@ -39,7 +36,7 @@ reg_speaker() {
       logger "success register bluetooth speaker ${BLSP}"
       return 0
   fi
-  logger "no ${BTSP} in ${BTLT}"
+  logger "no ${BTSP} in devices"
   return 1
 }
 
