@@ -29,7 +29,7 @@ reg_speaker() {
   bluetoothctl remove ${BTSP}
 
   # scan on for $1 min
-  stdbuf -oL bluetoothctl --timeout $1 scan on > ${BTLT} 
+  stdbuf -oL bluetoothctl --timeout $1 scan on  
 
   if check_speaker; then
       bluetoothctl connect ${BTSP}
@@ -45,16 +45,18 @@ WTIME=300
 for ((i=0; i<WTIME; i++)); do
     if check_bluetooth_service; then
         reg_speaker 180
+        break
     fi
     logger "wait bluetooth service active $i/$WTIME"
     sleep 1
 done
 
-logger "timeout wait bluetooth service active"
-
 # final try 
+bluetoothctl paired-devices
 if check_paired; then
-   reg_speaker 300
+   bluetoothctl paired-devices
+else
+   reg_speaker 180
 fi
 
 
