@@ -8,19 +8,19 @@ nowm=$(date +"%Y%m%d-%H:%M")
 nowh=$(date +"%H")
 
 cd /home/pi/MagicMirror
-echo "mm.sh > magicmirror : ${dow} ${nowh}"
+logger "mm.sh > magicmirror : ${dow} ${nowh}"
 
 if [[ "${dow}" == "6" || "${dow}" == "7" ]]; then
-    echo "mm.sh > googlephoto"
+    logger "mm.sh > googlephoto"
     $(${csh})
-elif [[ "${dow}" == "5" && "${nowh}" -gt 13 ]]; then
-    echo "mm.sh > googlephoto"
+elif [[ "${dow}" == "5" && "${nowh}" -gt 12 ]]; then
+    logger "mm.sh > googlephoto"
     $(${csh})
 elif [ "${nowh}" -gt 18 ]; then
-    echo "mm.sh > googlephoto"
+    logger "mm.sh > googlephoto"
     $(${csh})
 else
-    echo "mm.sh > calendor"
+    logger "mm.sh > calendor"
     cp ./config/config.js.common ./config/config.js
 fi 
 
