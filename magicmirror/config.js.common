@@ -107,15 +107,22 @@ let config = {
 				],
 			}
 		},
-        {
-              module: 'MMM-BackgroundSlideshow',
-              position: 'fullscreen_below',
-              config: {
-                 imagePaths: ['/home/pi/Pictures/JWST/'],
-                 transitionImages: true,
-                 randomizeImageOrder: true
-              }
-        },
+		{
+			module: "MMM-CalendarExt3",
+			header: "our calendar",
+			position: "middle_center",
+			config: {
+				mode: "week",
+				instanceId: "basicCalendar",
+				locale: 'ko-KR',
+				maxEventLines: 5,
+				firstDayOfWeek: 1,
+				weekindex: -1,
+				weeksInView: 5,
+				displayWeatherTemp: true,
+				calendarSet: [ "icloud", "ko_holiday" ]
+			}
+		},	
 		{
 			module: "MMM-WeatherChart",
 			position: "bottom_left",

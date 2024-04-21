@@ -21,10 +21,6 @@ let config = {
 	basePath: "/",			// The URL path where MagicMirror² is hosted. If you are using a Reverse proxy
 					  		// you must set the sub path here. basePath must end with a /
 	ipWhitelist: ["127.0.0.1", "::ffff:127.0.0.1", "::1"],	// Set [] to allow all IP addresses
-															// or add a specific IPv4 of 192.168.1.5 :
-															// ["127.0.0.1", "::ffff:127.0.0.1", "::1", "::ffff:192.168.1.5"],
-															// or IPv4 range of 192.168.3.0 --> 192.168.3.15 use CIDR format :
-															// ["127.0.0.1", "::ffff:127.0.0.1", "::1", "::ffff:192.168.3.0/28"],
 
 	useHttps: false, 		// Support HTTPS or not, default "false" will use HTTP
 	httpsPrivateKey: "", 	// HTTPS private key path, only require when useHttps is true
@@ -32,7 +28,7 @@ let config = {
 
 	language: "en",
 	locale: "en-US",
-	logLevel: ["INFO", "LOG", "WARN", "ERROR"], // Add "DEBUG" for even more logging
+	logLevel: ["DEBUG", "INFO", "LOG", "WARN", "ERROR"], // Add "DEBUG" for even more logging
 	timeFormat: 24,
 	units: "metric",
 
@@ -64,15 +60,6 @@ let config = {
 			  // See 'Configuration options' for more information.
 			},
 		},
-		/*
-		{
-			module: "MMM-FlipClock",
-			position: "top_bar",
-			timezone: "Asia/Seoul",
-			displaySeconds: "false",
-			easing: "ease-in-out-circ"
-  		},
-		*/
 		{
 			module: "MMM-OpenmapWeather",
 			position: "fullscreen_above",
@@ -86,7 +73,30 @@ let config = {
 				colorIcon: true
 			}
 		},	
-		/* default/calendar module configuration */
+		{
+			module: "MMM-GooglePhotos",
+			position: "middle_center",
+			config: {
+				albums: ["&ALBUM&",], 
+				updateInterval: 1000 * 5, // minimum 10 seconds.
+				sort: "random", // "old", "random"
+				uploadAlbum: null, // Only album created by `create_uploadable_album.js`.
+				condition: {
+					fromDate: null, // Or "2018-03", RFC ... format available
+					toDate: null, // Or "2019-12-25",
+					minWidth: null, // Or 400
+					maxWidth: null, // Or 8000
+					minHeight: null, // Or 400
+					maxHeight: null, // Or 8000
+					minWHRatio: null,
+					maxWHRatio: null,
+					// WHRatio = Width/Height ratio ( ==1 : Squared Photo,   < 1 : Portraited Photo, > 1 : Landscaped Photo)
+				},
+				showWidth: 1920, 
+				showHeight: 1080,
+				timeFormat: "YYYY/MM/DD HH:mm", // Or `relative` can be used.
+			}
+		},
 		{
 			module: "calendar",
 			position: "bottom_right",
@@ -107,15 +117,7 @@ let config = {
 				],
 			}
 		},
-        {
-              module: 'MMM-BackgroundSlideshow',
-              position: 'fullscreen_below',
-              config: {
-                 imagePaths: ['/home/pi/Pictures/JWST/'],
-                 transitionImages: true,
-                 randomizeImageOrder: true
-              }
-        },
+
 		{
 			module: "MMM-WeatherChart",
 			position: "bottom_left",
@@ -134,25 +136,9 @@ let config = {
 				showIcon: true
 			}
 		},
-		/*
-		{
-			module: "weather",
-			position: "bottom_left",
-			header: "Weather Forecast",
-			config: {
-					weatherProvider: "openweathermap",
-					type: "forecast",
-					//location: "New York",
-					//locationID: "1835848", //ID from http://bulk.openweathermap.org/sample/city.list.json.gz; unzip the gz file and find your city
-					location: "Seoul",
-					locationID: "1835847", //ID from http://bulk.openweathermap.org/sample/city.list.json.gz; unzip the gz file and find your city	
-					apiKey: "bfe4f26a6e90799397d2ecfb2e2eaf63"
-			}
-		},
-		*/
 		{
 			module: "MMM-PiTemp",
-			position: "top_right",
+			position: "top_left",
 			config: {}
 		},		
 		{
