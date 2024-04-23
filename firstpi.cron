@@ -1,0 +1,88 @@
+#####################################################################
+# Naver Stock
+#####################################################################
+*/05 09-16 * * 1-5 . /home/pi/.profile; cd new-horizons-conf; git pull
+*/10 10-15 * * 1-5 . /home/pi/.profile; stock-crawler --conf=$DEVEL_CFG/common.conf --list=$EXTERN_CFG/crawler.list
+
+####
+# 09:30 ~ 55
+30,35,40,50,55 9 * * 1-5 . /home/pi/.profile; stock-crawler --conf=$DEVEL_CFG/common.conf --list=$EXTERN_CFG/crawler.list
+
+####
+# Push
+25,45 09 * * 1-5 . /home/pi/.profile; stock-crawler --push --conf=$DEVEL_CFG/common.conf --list=$EXTERN_CFG/crawler.list
+00 10-16 * * 1-5 . /home/pi/.profile; stock-crawler --push --conf=$DEVEL_CFG/common.conf --list=$EXTERN_CFG/crawler.list
+
+
+#####################################################################
+# daily stock : data.go.kr ( 1 day ago )
+#####################################################################
+00 17 * * 1-5 . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf
+00 18 * * 1-5 . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=exchange --since=7
+00 10 * 1 1   . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=finance
+
+####################################################################
+# Bitcoin & gold, etc
+####################################################################
+35 17 * * * . /home/pi/.profile; bitcoin --conf=$DEVEL_CFG/common.conf
+
+#####################################################################
+# today summary on slack python client
+#####################################################################
+# deprecated
+#00 18 * * 1-5 . /home/pi/.profile; cd $DEVEL_GO_HOME/report; ./today_summary.sh today_summary.v2.sql
+
+30 18 * * 1-5 . /home/pi/.profile; cd $DEVEL_GO_HOME/report; ./today_summary.sh collected.sql
+
+#####################################################################
+
+#####################################################################
+# Daily Cleanup
+#####################################################################
+
+
+#####################################################################
+# Daily Shutdown
+#####################################################################
+# weekday
+30,55 19 * * 1-5 sudo shutdown -h now
+# weekend
+50,55 23 * * 6-7 sudo shutdown -h now
+
+
+#####################################################################
+# Daily DB Backup
+#####################################################################
+30 18 * * * . /home/pi/.profile; cd $DEVEL_HOME/opt/db-backdup; ./daily_dump.sh
+35 18 * * * . /home/pi/.profile; cd $DEVEL_HOME/opt/grafana; ./dropbox.sh
+
+#####################################################################
+# Monthly
+#####################################################################
+00 09 1 * *  . /home/pi/.profile; dart.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/opendart.conf --purpose=corp --once
+00 14 1-7 * *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population.lv1 --once
+
+#####################################################################
+# Quarterly
+# 3,5,8,11 10~30
+#####################################################################
+00 09 10-20 3,5,8,11 1-5  . /home/pi/.profile; dart.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/opendart.conf --purpose=acnt --once
+
+#####################################################################
+# Yearly
+#####################################################################
+00 09 1 1 *  . /home/pi/.profile; cd $DEVEL_HOME/services/holiday-kor/run.sh
+
+#####################################################################
+# every min
+#####################################################################
+* * * * * /home/pi/prometheus/thermal.sh
+
+#####################################################################
+# every week (fri day)
+#####################################################################
+00 09 * * 5 . /home/pi/.profile; jwst --common-conf=$DEVEL_CFG/common.conf
+00 12 * * 5 /home/pi/rpi-sync/rclone-sync.sh
+
+00 04 * * * find /home/pi/new-horizons/log -type f -mtime +5 -exec rm {} \;
+
