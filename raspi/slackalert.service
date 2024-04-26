@@ -1,0 +1,13 @@
+[Unit]
+Description=Slack Websocket Receiver
+Documentation=https://api.slack.com/apps/A01KFMH1K7B/slash-commands?saved=1
+After=network-online.target
+
+[Service]
+User=pi
+Restart=on-failure
+
+ExecStart=/home/pi/new-horizons/bin/gomp3play /home/pi/new-horizons/bin/callsound1.mp3
+
+[Install]
+WantedBy=multi-user.target

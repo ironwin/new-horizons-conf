@@ -1,0 +1,14 @@
+[Unit]
+Description=Slack WebSocket Receiver (SlackApp)
+Documentation=https://api.slack.com/apps/A01KFMH1K7B/slash-commands?saved=1
+After=network-online.target
+
+[Service]
+Type=idle
+User=pi
+Restart=on-failure
+
+ExecStart=/home/pi/new-horizons/bin/slackapp --cfg=/home/pi/new-horizons/cfg/common.conf --env=/home/pi/new-horizons/cfg/firstpi.slack.env
+
+[Install]
+WantedBy=multi-user.target
