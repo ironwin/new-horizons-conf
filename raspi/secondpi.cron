@@ -11,7 +11,7 @@
 
 15 07 * * 1-5 sudo service magicmirror restart
 01 19 * * 1-5 sudo service magicmirror restart
-00 19 * * 7 sudo service magicmirror restart
+00 19 * * 7   sudo service magicmirror restart
 
 #####################################################################
 # Turn On Monitor
@@ -23,3 +23,8 @@
 #####################################################################
 * * * * * /home/pi/prometheus/thermal.sh
 
+#####################################################################
+# mysql upload
+#####################################################################
+0  19 * * 1-5 . ~/.profile; cd ~/dbdump; gunzip stock.dbdump.gz; mydbs < stock.dbdump
+30 19 * * 1-5 . ~/.profile; cd ~/dbdump; gunzip vote.dbdump.gz;  mydbv < vote.dbdump
