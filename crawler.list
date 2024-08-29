@@ -2,5 +2,5 @@
 hyundai, 005380, lt, 200000, price
 #kakao, 035720, gt, 80000, price
 samsung, 005930, lt, 70000, price
-skhynix, 000660, gt, 150000, price
+skhynix, 000660, lt, 150000, price
 cjcgv, 079160, gt, 7950, price
