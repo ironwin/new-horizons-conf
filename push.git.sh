@@ -12,7 +12,7 @@ git pull
 crontab -l > ./raspi/$THIS/$THIS.crontab
 cp ~/.profile ./raspi/$THIS/$THIS.profile
 
-git commit -m "$TODAY updated"
+git commit -a -m "$TODAY updated"
 git push
 
 

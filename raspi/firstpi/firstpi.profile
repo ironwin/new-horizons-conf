@@ -39,7 +39,7 @@ export PATH=$PATH:/usr/local/go/bin
 alias ll='ls -al'
 
 hname=$(hostname)
-haddr=$(hostname -i)
+haddr=$(hostname -I | awk '{print $1}')
 PS1="[\u@${CRED}${hname}${CCLR}:${haddr} \W]\$ "
 
 ################################################################
@@ -65,7 +65,11 @@ export SLACK_BOT_TOKEN="xoxb-1634287164039-6712797519491-ZV7SazF0PoSgkkHneha799B
 ################################################################
 #export DISPLAY=:0
 
+alias mydba='sudo mysql -u root -p'
 alias mydb='mysql --table --host=0.0.0.0 --port=3306 --user=stock -pmy@raspberry2 stock' # my@raspberery2
+alias mydbs='mysql --table --host=0.0.0.0 --port=3306 --user=stock -pmy@raspberry2 stock' # my@raspberery2
+alias mydbv='mysql --table --host=0.0.0.0 --port=3306 --user=vote -pmy@raspberry2 vote' # my@raspberery2
+
 alias mydbdump='mysqldump --login-path=stock --column-statistics=0 stock > stock.dump'
 
 alias cddev='cd $DEVEL_GO_HOME'
