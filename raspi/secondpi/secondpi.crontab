@@ -1,0 +1,36 @@
+#####################################################################
+# Daily Shutdown
+#####################################################################
+#####################################################################
+# 21:55 Daily shutdown before power plug off 22:00
+# Mon ~ Thu
+20 08 * * 1-5 sudo shutdown -h now
+55 21 * * 1-4 sudo shutdown -h now
+# Fri ~ Sun
+20 23 * * 5-7 sudo shutdown -h now
+
+# backup 
+00 21 * * * /home/pi/new-horizons-conf/push.git.sh secondpi
+
+#####################################################################
+# magic mirror 
+#####################################################################
+15 07 * * 1-5 sudo service magicmirror restart
+01 19 * * 1-5 sudo service magicmirror restart
+00 19 * * 7   sudo service magicmirror restart
+
+#####################################################################
+# Turn On Monitor
+#####################################################################
+#* * * * * export DISPLAY=:0; xset dpms force on
+
+#####################################################################
+# thermal to prometheus
+#####################################################################
+#* * * * * /home/pi/new-horizons/raspberryPi/raspi-sensors-collector.sh
+
+#####################################################################
+# mysql upload
+#####################################################################
+#0  19 * * 1-5 . ~/.profile; cd ~/Pibackup; gunzip -f stock.dbdump.gz; mydbs < stock.dbdump
+#30 19 * * 1-5 . ~/.profile; cd ~/Pibackup; gunzip -f vote.dbdump.gz;  mydbv < vote.dbdump
