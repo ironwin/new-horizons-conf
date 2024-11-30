@@ -2,8 +2,8 @@
 
 work_path="/home/pi/new-horizons-conf"
 file_path="googlephoto.albums"
-tplm_conf="config.js.googlephoto.template"
-last_conf="config.js"
+tplm_conf="./magicmirror/config.js.googlephoto.template"
+last_conf="./magicmirror/config.js"
 mgcf_path="/home/pi/MagicMirror/config"
 cach_path="/home/pi/MagicMirror/modules/MMM-GooglePhotos/cache"
 
