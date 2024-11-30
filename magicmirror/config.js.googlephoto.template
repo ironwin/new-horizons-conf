@@ -97,6 +97,16 @@ let config = {
 			}
 		},
 		{
+			module: "MMM-OneCallWeather",
+			position: "top_left",
+			// Best results in bottom_bar region due to horizontal default layout and icon sizes.
+			config: {
+			  latitude: "37.532600", // Longitude from https://www.latlong.net/
+			  longitude: "127.024612", // Longitude from https://www.latlong.net/ - is West + is East of London
+			  apikey: "bfe4f26a6e90799397d2ecfb2e2eaf63" // openweathermap.org API key
+			}
+		},		
+		{
 			module: "MMM-WeatherChart",
 			position: "bottom_left",
 			config: {
