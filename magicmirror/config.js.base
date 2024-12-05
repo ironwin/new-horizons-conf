@@ -118,6 +118,7 @@ let config = {
 				label_low: ""
 			}
 		},
+                /*
 		{
 			module: "weather",
 			position: "top_left",
@@ -139,6 +140,7 @@ let config = {
 				lon: 127.024612,
 			}
 		},		
+                */
 		{
 			module: "MMM-OneCallWeather",
 			position: "top_left",
