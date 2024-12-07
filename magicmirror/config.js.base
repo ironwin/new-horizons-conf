@@ -93,6 +93,15 @@ let config = {
 			}
 		},	
 		{
+			module: "MMM-Moon",
+			position: "top_right",
+			config: {
+				lat: 37.532600,
+				lon: 127.024612,
+				timezone: "Asia/Seoul"
+			}
+		},	
+		{
 			module: "MMM-AccuWeatherForecastDeluxe",
 			header: "Tiled Layouts",
 			position: "top_right",
@@ -118,17 +127,6 @@ let config = {
 				label_low: ""
 			}
 		},
-                /*
-		{
-			module: "weather",
-			position: "top_left",
-			config: {
-				weatherProvider: "openmeteo",
-				type: "current",
-				lat: 37.532600,
-				lon: 127.024612,
-			}
-		},		
 		{
 			module: "weather",
 			position: "bottom_left",
@@ -140,7 +138,6 @@ let config = {
 				lon: 127.024612,
 			}
 		},		
-                */
 		{
 			module: "MMM-OneCallWeather",
 			position: "top_left",
@@ -191,15 +188,6 @@ let config = {
 			module: "MMM-PiTemp",
 			position: "bottom_left",
 			config: {}
-		},	
-		{
-			module: "MMM-Moon",
-			position: "bottom_right",
-			config: {
-				lat: 37.532600,
-				lon: 127.024612,
-				timezone: "Asia/Seoul"
-			}
 		}	
 	]
 };
