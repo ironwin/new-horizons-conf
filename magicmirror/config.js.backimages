@@ -42,7 +42,6 @@ let config = {
                         showAllImagesBeforeRestart: true, 
                         showImageInfo: true,
                         imageInfoLocation: true,
-                        imageInfo: date, name, 
       			transitionImages: true,
       			randomizeImageOrder: true
     		}
