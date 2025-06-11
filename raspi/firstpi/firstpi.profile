@@ -87,3 +87,6 @@ alias monitoron='export DISPLAY=:0; xset dpms force on'
 alias monitoroff='export DISPLAY=:0; xset dpms force off'
 
 alias cdsql='cd /home/pi/new-horizons/go-dev.v2/report/stock'
+
+# ssh-copy-id -i ~/.ssh/id_rsa.pub root@wdcloud
+

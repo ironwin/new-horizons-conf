@@ -106,5 +106,5 @@
 #####################################################################
 # every week (fri day)
 #####################################################################
-00 09 * * 5 . /home/pi/.profile; jwst --common-conf=$DEVEL_CFG/common.conf
+15 18 * * 5 . /home/pi/.profile; jwst --common-conf=$DEVEL_CFG/common.conf
 #00 12 * * 5 /home/pi/rpi-sync/rclone-sync.sh
