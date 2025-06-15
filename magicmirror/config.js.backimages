@@ -37,8 +37,8 @@ let config = {
     		module: 'MMM-BackgroundSlideshow',
     		position: 'fullscreen_below',
     		config: {
-      			imagePaths: ['/media/pi/SSD-256-USB/@IMG_DIR@'],
-                        resizeImages: false, 
+      			imagePaths: ['/media/pi/SSD-256-USB/PHOTOS/@IMG_DIR@'],
+                        resizeImages: true, 
                         showAllImagesBeforeRestart: true, 
                         showImageInfo: true,
                         imageInfoLocation: true,
