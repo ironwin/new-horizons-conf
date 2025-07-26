@@ -38,7 +38,7 @@ let config = {
     		position: 'fullscreen_below',
     		config: {
       			imagePaths: ['/media/pi/SSD-256-USB/PHOTOS/@IMG_DIR@'],
-                        resizeImages: true, 
+                        resizeImages: false, 
                         showAllImagesBeforeRestart: true, 
                         showImageInfo: true,
                         imageInfoLocation: true,
