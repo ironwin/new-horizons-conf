@@ -7,9 +7,6 @@ IMAGE_PATH="/media/pi/SSD-256-USB/PHOTOS"
 CONFIG_BASE="./magicmirror/config.js.backimages"
 CONFIG_LAST="/home/pi/MagicMirror/config/config.js"
 
-TARGET="25.07.sapporo"
-sed "s/@IMG_DIR@/${TARGET}/g"  "$CONFIG_BASE" > "$CONFIG_LAST"
-exit
 
 # 1. 디렉토리 목록 생성 및 필터링
 dirs=()
