@@ -34,7 +34,7 @@ IFS=$'\n' sorted=($(sort <<<"${dirinfo[*]}"))
 unset IFS
 
 # 3. 올해의 현재 주차(0부터 시작)
-week_num=$(date +%V)
+week_num=$(date +%d)
 week_index=$((10#$week_num - 1))
 
 # 4. 모듈러 연산
