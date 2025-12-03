@@ -28,6 +28,7 @@
 # weekday (
 00 19 * * 1-5 /home/pi/new-horizons-conf/push.git.sh  firstpi
 30,55 19 * * 1-5 sudo shutdown -h now
+
 # weekend
 # pause for hungary
 #00 23 * * 1-5 /home/pi/new-horizons-conf/push.git.sh firstpi
@@ -48,14 +49,14 @@
 25,45 09 * * 1-5 . /home/pi/.profile; stock-crawler --push --conf=$DEVEL_CFG/common.conf --list=$EXTERN_CFG/crawler.list
 00 10-16 * * 1-5 . /home/pi/.profile; stock-crawler --push --conf=$DEVEL_CFG/common.conf --list=$EXTERN_CFG/crawler.list
 
-
 #####################################################################
 # daily stock : data.go.kr ( 1 day ago )
 #####################################################################
+# data.go.kr 
 00 17 * * 1-5 . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf
 00 18 * * 1-5 . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=exchange --since=7
-00 10 * 1 1   . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=finance
-00 10,18 * 1 1   . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=astro --today
+# bok.go.kr
+00 10 * * 1-5  . /home/pi/.profile; bok.go.kr --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=daily --since=7
 
 ####################################################################
 # Bitcoin & gold, etc
@@ -84,8 +85,31 @@
 #####################################################################
 # Monthly
 #####################################################################
-#00 09 1 * *  . /home/pi/.profile; dart.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/opendart.conf --purpose=corp --once
-#00 10 1-10 * *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population.lv1 --once
+# bok.go.kr
+#00 10 * 1 1   . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=finance
+00 09 25 * *  . /home/pi/.profile; bok.go.kr --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=trends --since=30
+
+# not work properly : executed all lines regardless of day of week
+#00 09 1-7 * 1  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population.lv1 --today
+#00 09 1-7 * 2  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --today --task="11 26 27 28 29 30 31 36 41 43"
+#00 09 1-7 * 3  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --today --task="44 46 47"
+#00 09 1-7 * 4  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --today --task="48 50 51 52"
+
+# working properly : executed conditionally based on day of week
+# warn> full path use!!
+00 09 1-7 * * [ $(date +\%u) -eq 1 ] && [ $(date +\%d) -le 7 ] && /home/pi/new-horizons/bin/pp.cron.sh 1
+00 09 1-7 * * [ $(date +\%u) -eq 2 ] && [ $(date +\%d) -le 7 ] && /home/pi/new-horizons/bin/pp.cron.sh 2
+00 09 1-7 * * [ $(date +\%u) -eq 3 ] && [ $(date +\%d) -le 7 ] && /home/pi/new-horizons/bin/pp.cron.sh 3
+00 09 1-7 * * [ $(date +\%u) -eq 4 ] && [ $(date +\%d) -le 7 ] && /home/pi/new-horizons/bin/pp.cron.sh 4
+
+# For Recover
+00 09 2 12 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20250901,20250902 --task="11 26 27 28 29 30 31 36 41 43" 
+00 09 3 12 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20250901,20250902 --task="44 46 47" 
+00 09 4 12 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20250901,20250901 --task="48 50 51 52" 
+
+#00 09 5 12 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --today --task="11 26 27 28 29 30 31 36 41 43" 
+#00 09 8 12 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --today --task="44 46 47" 
+#00 09 9 12 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --today --task="48 50 51 52" 
 
 #####################################################################
 # Quarterly
