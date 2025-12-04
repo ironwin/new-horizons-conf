@@ -53,8 +53,8 @@
 # daily stock : data.go.kr ( 1 day ago )
 #####################################################################
 # data.go.kr 
-00 17 * * 1-5 . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf
-00 18 * * 1-5 . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=exchange --since=7
+#00 17 * * 1-5 . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf
+#00 18 * * 1-5 . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=exchange --since=7
 # bok.go.kr
 00 10 * * 1-5  . /home/pi/.profile; bok.go.kr --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=daily --since=7
 
