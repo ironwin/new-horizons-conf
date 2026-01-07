@@ -43,7 +43,7 @@ let config = {
                         showImageInfo: true,
                         imageInfoLocation: true,
       			transitionImages: true,
-      			randomizeImageOrder: true
+      			randomizeImageOrder: false 
     		}
   	},
         {

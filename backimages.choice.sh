@@ -7,6 +7,7 @@ IMAGE_PATH="/media/pi/SSD-256-USB/PHOTOS"
 CONFIG_BASE="./magicmirror/config.js.backimages"
 CONFIG_LAST="/home/pi/MagicMirror/config/config.js"
 
+
 # 1. 디렉토리 목록 생성 및 필터링
 dirs=()
 while IFS= read -r -d '' dir; do
@@ -33,7 +34,7 @@ IFS=$'\n' sorted=($(sort <<<"${dirinfo[*]}"))
 unset IFS
 
 # 3. 올해의 현재 주차(0부터 시작)
-week_num=$(date +%V)
+week_num=$(date +%d)
 week_index=$((10#$week_num - 1))
 
 # 4. 모듈러 연산
@@ -57,6 +58,7 @@ for i in "${!sorted[@]}"; do
   fi
 done
 
+TARGET="26.01.shanghai"
 echo ${TARGET}
 #sed "s"|@IMG_DIR@|${TARGET}|g"  "$CONFIG_BASE" > "$CONFIG_LAST"
 sed "s/@IMG_DIR@/${TARGET}/g"  "$CONFIG_BASE" > "$CONFIG_LAST"

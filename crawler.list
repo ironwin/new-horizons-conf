@@ -1,6 +1,6 @@
 # upload github. git pull test
-hyundai, 005380, gt, 350000, price
+hyundai, 005380, lt, 290000, price
 kakao, 035720, gt, 80000, price
 ntels, 069410, gt, 8000, price
-#cjcgv, 079160, gt, 7950, price
+>>>>>>> bf65218454f7360f2ff839c4f3fcc21f81ffc5c1
 cjenm, 035760, gt, 100000, price
