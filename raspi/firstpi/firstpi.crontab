@@ -101,6 +101,7 @@
 00 09 1-7 * * [ $(date +\%u) -eq 2 ] && [ $(date +\%d) -le 7 ] && /home/pi/new-horizons/bin/pp.cron.sh 2
 00 09 1-7 * * [ $(date +\%u) -eq 3 ] && [ $(date +\%d) -le 7 ] && /home/pi/new-horizons/bin/pp.cron.sh 3
 00 09 1-7 * * [ $(date +\%u) -eq 4 ] && [ $(date +\%d) -le 7 ] && /home/pi/new-horizons/bin/pp.cron.sh 4
+00 09 14 1 * /home/pi/new-horizons/bin/pp.cron.sh 4
 
 # For Recover
 #00 09 2 12 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20250901,20250902 --task="11 26 27 28 29 30 31 36 41 43" 
