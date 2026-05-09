@@ -59,7 +59,7 @@ for i in "${!sorted[@]}"; do
 done
 
 #TARGET="26.01.shanghai"
-TARGET="26.04.nagoya"
+#TARGET="26.04.nagoya"
 
 sed "s/@IMG_DIR@/${TARGET}/g"  "$CONFIG_BASE" > "$CONFIG_LAST"
 
