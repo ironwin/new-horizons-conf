@@ -90,23 +90,25 @@
 00 09 25 * *  . /home/pi/.profile; bok.go.kr --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=trends --since=30
 
 # not work properly : executed all lines regardless of day of week
-#00 09 1-7 * 1  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population.lv1 --today
+#00 09 1-7 * 1  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population.lv1 --range=20260401,20260401
 #00 09 1-7 * 2  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --today --task="11 26 27 28 29 30 31 36 41 43"
 #00 09 1-7 * 3  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --today --task="44 46 47"
 #00 09 1-7 * 4  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --today --task="48 50 51 52"
 
 # working properly : executed conditionally based on day of week
 # warn> full path use!!
-00 09 1-7 * * [ $(date +\%u) -eq 1 ] && [ $(date +\%d) -le 7 ] && /home/pi/new-horizons/bin/pp.cron.sh 1
-00 09 1-7 * * [ $(date +\%u) -eq 2 ] && [ $(date +\%d) -le 7 ] && /home/pi/new-horizons/bin/pp.cron.sh 2
-00 09 1-7 * * [ $(date +\%u) -eq 3 ] && [ $(date +\%d) -le 7 ] && /home/pi/new-horizons/bin/pp.cron.sh 3
-00 09 1-7 * * [ $(date +\%u) -eq 4 ] && [ $(date +\%d) -le 7 ] && /home/pi/new-horizons/bin/pp.cron.sh 4
-00 09 14 1 * /home/pi/new-horizons/bin/pp.cron.sh 4
+# "It's the first Monday of the month! >> Get Last month stats "
+#00 09 1-7 * * [ $(date +\%u) -eq 1 ] && [ $(date +\%d) -le 7 ] && /home/pi/new-horizons/bin/pp.cron.sh 1
+#00 09 1-7 * * [ $(date +\%u) -eq 2 ] && [ $(date +\%d) -le 7 ] && /home/pi/new-horizons/bin/pp.cron.sh 2
+#00 09 1-7 * * [ $(date +\%u) -eq 3 ] && [ $(date +\%d) -le 7 ] && /home/pi/new-horizons/bin/pp.cron.sh 3
+#00 09 1-7 * * [ $(date +\%u) -eq 4 ] && [ $(date +\%d) -le 7 ] && /home/pi/new-horizons/bin/pp.cron.sh 4
+#00 09 14 1 * /home/pi/new-horizons/bin/pp.cron.sh 4
 
 # For Recover
-#00 09 2 12 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20250901,20250902 --task="11 26 27 28 29 30 31 36 41 43" 
-#00 09 3 12 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20250901,20250902 --task="44 46 47" 
-#00 09 4 12 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20250901,20250901 --task="48 50 51 52" 
+#00 09 1-7 * 1  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population.lv1 --range=20260401,20260401
+#00 09 31 05 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260401,20240402 --task="11 26 27 28 29 30 31 36 41 43" 
+00 09 2 6 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260401,20260401 --task="44 46 47" 
+00 09 3 6 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260401,20260401 --task="48 50 51 52" 
 
 #####################################################################
 # Quarterly
