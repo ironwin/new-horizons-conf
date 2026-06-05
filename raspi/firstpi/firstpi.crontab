@@ -97,18 +97,17 @@
 
 # working properly : executed conditionally based on day of week
 # warn> full path use!!
-# "It's the first Monday of the month! >> Get Last month stats "
-#00 09 1-7 * * [ $(date +\%u) -eq 1 ] && [ $(date +\%d) -le 7 ] && /home/pi/new-horizons/bin/pp.cron.sh 1
-#00 09 1-7 * * [ $(date +\%u) -eq 2 ] && [ $(date +\%d) -le 7 ] && /home/pi/new-horizons/bin/pp.cron.sh 2
-#00 09 1-7 * * [ $(date +\%u) -eq 3 ] && [ $(date +\%d) -le 7 ] && /home/pi/new-horizons/bin/pp.cron.sh 3
-#00 09 1-7 * * [ $(date +\%u) -eq 4 ] && [ $(date +\%d) -le 7 ] && /home/pi/new-horizons/bin/pp.cron.sh 4
-#00 09 14 1 * /home/pi/new-horizons/bin/pp.cron.sh 4
+# "It's the Second Monday of the month! >> Get Last month stats "
+#00 09 8-14 * * [ $(date +\%u) -eq 1 ] && [ $(date +\%d) -ge 8 ] && [ $(date +\%d) -le 14 ] && /home/pi/new-horizons/bin/pp.cron.sh 1
+#00 09 8-14 * * [ $(date +\%u) -eq 2 ] && [ $(date +\%d) -ge 8 ] && [ $(date +\%d) -le 14 ] && /home/pi/new-horizons/bin/pp.cron.sh 2
+#00 09 8-14 * * [ $(date +\%u) -eq 3 ] && [ $(date +\%d) -ge 8 ] && [ $(date +\%d) -le 14 ] && /home/pi/new-horizons/bin/pp.cron.sh 3
+#00 09 8-14 * * [ $(date +\%u) -eq 4 ] && [ $(date +\%d) -ge 8 ] && [ $(date +\%d) -le 14 ] && /home/pi/new-horizons/bin/pp.cron.sh 4
 
 # For Recover
 #00 09 1-7 * 1  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population.lv1 --range=20260401,20260401
 #00 09 31 05 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260401,20240402 --task="11 26 27 28 29 30 31 36 41 43" 
-00 09 2 6 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260401,20260401 --task="44 46 47" 
-00 09 3 6 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260401,20260401 --task="48 50 51 52" 
+00 09 8 6 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260501,20260501 --task="44 46 47" 
+00 09 9 6 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260501,20260501 --task="48 50 51 52" 
 
 #####################################################################
 # Quarterly
