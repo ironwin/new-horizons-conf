@@ -48,9 +48,10 @@ export DEVEL_PATH=$DEVEL_HOME
 export DEVEL_BIN=$DEVEL_HOME/bin
 export DEVEL_CFG=$DEVEL_HOME/cfg
 export DEVEL_LOG=$DEVEL_HOME/log
+export CRON_LOG_DIR=/$DEVEL_LOG/cron
 
 ################################################################
-export DEVEL_GO_HOME=$DEVEL_HOME/go-dev.v2
+export DEVEL_GO_HOME=$DEVEL_HOME/go-dev.v3
 export DEVEL_GO_BIN=$DEVEL_GO_HOME/bin
 export DEVEL_GO_CFG=$DEVEL_GO_HOME/cfg
 export DEVEL_GO_LOG=$DEVEL_GO_HOME/log
@@ -90,3 +91,8 @@ alias cdsql='cd /home/pi/new-horizons/go-dev.v2/report/stock'
 
 # ssh-copy-id -i ~/.ssh/id_rsa.pub root@wdcloud
 
+
+# Gmail SMTP credentials for daily report
+export SMTP_USER="ironwin2@gmail.com"
+export SMTP_PASS="euuxzazmptzlyflb"
+export REPORT_TO="ironwin@ntels.com"

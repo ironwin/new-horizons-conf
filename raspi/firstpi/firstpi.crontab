@@ -1,132 +1,107 @@
-# Edit this file to introduce tasks to be run by cron.
-# 
-# Each task to run has to be defined through a single line
-# indicating with different fields when the task will be run
-# and what command to run for the task
-# 
-# To define the time you can provide concrete values for
-# minute (m), hour (h), day of month (dom), month (mon),
-# and day of week (dow) or use '*' in these fields (for 'any').
-# 
-# Notice that tasks will be started based on the cron's system
-# daemon's notion of time and timezones.
-# 
-# Output of the crontab jobs (including errors) is sent through
-# email to the user the crontab file belongs to (unless redirected).
-# 
-# For example, you can run a backup of all your user accounts
-# at 5 a.m every week with:
-# 0 5 * * 1 tar -zcf /var/backups/home.tgz /home/
-# 
-# For more information see the manual pages of crontab(5) and cron(8)
-# 
-# m h  dom mon dow   command
+# Final crontab (2026-06-14)
+# -------------------------------------------------------------------
+# [Execution Item Guide]
+# 1) Env setup
+#    - SHELL/PATH/CRON_LOG_DIR: cron 실행 환경과 공통 로그 경로 정의
+#
+# 2) Daily shutdown flow (weekdays)
+#    - 19:00 push.git.sh: 소스 변경사항 푸시
+#    - 20:10 shutdown: 야간 종료 (작업 완료 시간 확보)
+#
+# 3) Naver stock crawling flow (weekdays)
+#    - git pull: 각 stock-crawler 실행 직전에 수행
+#    - stock-crawler: 09~15시 10분 주기 (활성)
+#    - stock-crawler --push: 현재 주석 처리(비활성)
+#    - push 동작 분석: --push=true 이면 임계치 비교 없이 요약 메시지(summary)를 생성해 Slack 전송
+#    - 일반 동작: --push=false 이면 oper/item/threshold 조건을 통과한 종목만 요약 전송
+#    - flock: 중복 실행 방지
+#
+# 4) Public data collection flow (weekdays)
+#    - data.go.kr.v3 daily: 17:00
+#    - data.go.kr.v3 exchange: 18:00
+#    - bok.go.kr daily: 10:05
+#
+# 5) Maintenance flow
+#    - Daily cleanup: 매일 04:00, 5일 초과 로그 삭제
+#    - Daily DB backup: 매일 19:05
+#
+# 6) Long-cycle flow
+#    - Monthly trends: 매월 25일 20:30
+#    - Annual recover jobs: 6/15 20:40, 6/16 21:40
+#    - Weekly jwst: 매주 금요일 18:15
+#
+# 9) Daily collect report
+#    - 18:00 collection_cycle_report.sh: 수집주기별(일별/주별/월별/년별) 현황 Slack 전송
+#    - Monthly population: 매월 2번째 월요일 09:00 (population.lv1 → 3일 task)
+#
+# 7) Logging policy
+#    - 표준출력/오류를 $CRON_LOG_DIR/*.log로 분리 저장
+#
+# 8) Lock policy
+#    - flock -n /tmp/*.lock 사용
+#    - 동일 작업 실행 중이면 다음 스케줄은 즉시 스킵
+# -------------------------------------------------------------------
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+CRON_LOG_DIR=/home/pi/new-horizons/log/cron
 
 #####################################################################
-# Daily Shutdown
+# Daily Shutdown (weekdays)
 #####################################################################
-# weekday (
-00 19 * * 1-5 /home/pi/new-horizons-conf/push.git.sh  firstpi
-30,55 19 * * 1-5 sudo shutdown -h now
-
-# weekend
-# pause for hungary
-#00 23 * * 1-5 /home/pi/new-horizons-conf/push.git.sh firstpi
-#50,55 23 * * 6-7 sudo shutdown -h now
+00 19 * * 1-5 /home/pi/new-horizons-conf/push.git.sh firstpi >> $CRON_LOG_DIR/push_git.log 2>&1
+10 20 * * 1-5 sudo shutdown -h now
 
 #####################################################################
-# Naver Stock crawling 
+# Naver Stock crawling
 #####################################################################
-*/05 09-16 * * 1-5 . /home/pi/.profile; cd new-horizons-conf; git pull
-*/10 10-15 * * 1-5 . /home/pi/.profile; stock-crawler --conf=$DEVEL_CFG/common.conf --list=$EXTERN_CFG/crawler.list
+# Main crawler (run git pull before each execution)
+*/10 9-15 * * 1-5 . /home/pi/.profile; cd /home/pi/new-horizons-conf && git pull >> $CRON_LOG_DIR/git_pull.log 2>&1; flock -n /tmp/stock-crawler.lock stock-crawler --conf=$DEVEL_CFG/common.conf --list=$EXTERN_CFG/crawler.list >> $CRON_LOG_DIR/stock_crawler.log 2>&1
 
-####
-# 09:30 ~ 55
-30,35,40,50,55 9 * * 1-5 . /home/pi/.profile; stock-crawler --conf=$DEVEL_CFG/common.conf --list=$EXTERN_CFG/crawler.list
-
-####
-# Push
-25,45 09 * * 1-5 . /home/pi/.profile; stock-crawler --push --conf=$DEVEL_CFG/common.conf --list=$EXTERN_CFG/crawler.list
-00 10-16 * * 1-5 . /home/pi/.profile; stock-crawler --push --conf=$DEVEL_CFG/common.conf --list=$EXTERN_CFG/crawler.list
+# Push mode (currently disabled): when enabled, send summary without threshold filtering
+0 10-16 * * 1-5 . /home/pi/.profile; cd /home/pi/new-horizons-conf && git pull >> $CRON_LOG_DIR/git_pull.log 2>&1; flock -n /tmp/stock-crawler-push.lock stock-crawler --push --conf=$DEVEL_CFG/common.conf --list=$EXTERN_CFG/crawler.list >> $CRON_LOG_DIR/stock_crawler_push.log 2>&1
 
 #####################################################################
-# daily stock : data.go.kr ( 1 day ago )
+# Daily stock : data.go.kr / bok.go.kr
 #####################################################################
-# data.go.kr 
-00 17 * * 1-5 . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf
-00 18 * * 1-5 . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=exchange --since=7
-# bok.go.kr
-00 10 * * 1-5  . /home/pi/.profile; bok.go.kr --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=daily --since=7
+00 17 * * 1-5 . /home/pi/.profile; flock -n /tmp/data-go-kr.lock data.go.kr.v3 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf >> $CRON_LOG_DIR/data_go_kr_daily.log 2>&1
+00 18 * * 1-5 . /home/pi/.profile; flock -n /tmp/data-go-kr-exchange.lock data.go.kr.v3 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=exchange --since=7 >> $CRON_LOG_DIR/data_go_kr_exchange.log 2>&1
+05 10 * * 1-5 . /home/pi/.profile; flock -n /tmp/bok-go-kr-daily.lock bok.go.kr --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=daily --since=7 >> $CRON_LOG_DIR/bok_daily.log 2>&1
 
-####################################################################
-# Bitcoin & gold, etc
-####################################################################
-#35 17 * * * . /home/pi/.profile; bitcoin --conf=$DEVEL_CFG/common.conf
+# failover 
+00 11 15 6 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260401,20240401 --task="11 26 27 28 29 30 31 36 41 43"
+00 09 16 6 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260501,20240501 --task="11 26 27 28 29 30 31 36 41 43"
 
 #####################################################################
-# today summary on slack python client
+# Monthly Population (2nd Monday auto-scheduler)
+#   - 2nd Monday: population.lv1 --today  (if data collected → triggers 3-day sequence)
+#   - +1 biz day : population tasks 44 46 47
+#   - +2 biz days: population tasks 48 50 51 52
+#   State file: $DEVEL_LOG/population_cron_state.txt
 #####################################################################
-#30 18 * * 1-5 . /home/pi/.profile; cd $DEVEL_GO_HOME/report; ./today_summary.sh collected.sql
-
-#####################################################################
+00 09 * * 1-5 . /home/pi/.profile; flock -n /tmp/population-cron.lock /home/pi/new-horizons/go-dev.v3/services/data.go.kr/svt/pp.cron.sh >> $CRON_LOG_DIR/population_cron.log 2>&1
 
 #####################################################################
 # Daily Cleanup
 #####################################################################
 00 04 * * * find /home/pi/new-horizons/log -type f -mtime +5 -exec rm {} \;
 
-
 #####################################################################
 # Daily DB Backup
 #####################################################################
-30 18 * * * . /home/pi/.profile; cd $DEVEL_HOME/opt/db-backdup; ./daily_dump.sh
-#35 18 * * * . /home/pi/.profile; cd $DEVEL_HOME/opt/grafana; ./dropbox.sh
+05 19 * * * . /home/pi/.profile; cd $DEVEL_HOME/opt/db-backdup && flock -n /tmp/db-backup.lock ./daily_dump.sh >> $CRON_LOG_DIR/db_backup.log 2>&1
 
 #####################################################################
 # Monthly
 #####################################################################
-# bok.go.kr
-#00 10 * 1 1   . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=finance
-00 09 25 * *  . /home/pi/.profile; bok.go.kr --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=trends --since=30
-
-# not work properly : executed all lines regardless of day of week
-#00 09 1-7 * 1  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population.lv1 --range=20260401,20260401
-#00 09 1-7 * 2  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --today --task="11 26 27 28 29 30 31 36 41 43"
-#00 09 1-7 * 3  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --today --task="44 46 47"
-#00 09 1-7 * 4  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --today --task="48 50 51 52"
-
-# working properly : executed conditionally based on day of week
-# warn> full path use!!
-# "It's the Second Monday of the month! >> Get Last month stats "
-#00 09 8-14 * * [ $(date +\%u) -eq 1 ] && [ $(date +\%d) -ge 8 ] && [ $(date +\%d) -le 14 ] && /home/pi/new-horizons/bin/pp.cron.sh 1
-#00 09 8-14 * * [ $(date +\%u) -eq 2 ] && [ $(date +\%d) -ge 8 ] && [ $(date +\%d) -le 14 ] && /home/pi/new-horizons/bin/pp.cron.sh 2
-#00 09 8-14 * * [ $(date +\%u) -eq 3 ] && [ $(date +\%d) -ge 8 ] && [ $(date +\%d) -le 14 ] && /home/pi/new-horizons/bin/pp.cron.sh 3
-#00 09 8-14 * * [ $(date +\%u) -eq 4 ] && [ $(date +\%d) -ge 8 ] && [ $(date +\%d) -le 14 ] && /home/pi/new-horizons/bin/pp.cron.sh 4
-
-# For Recover
-#00 09 1-7 * 1  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population.lv1 --range=20260401,20260401
-#00 09 31 05 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260401,20240402 --task="11 26 27 28 29 30 31 36 41 43" 
-00 09 8 6 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260501,20260501 --task="44 46 47" 
-00 09 9 6 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260501,20260501 --task="48 50 51 52" 
+30 20 25 * * . /home/pi/.profile; flock -n /tmp/bok-trends.lock bok.go.kr --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=trends --since=30 >> $CRON_LOG_DIR/bok_trends.log 2>&1
 
 #####################################################################
-# Quarterly
-# 3,5,8,11 10~30
+# Weekly (Friday)
 #####################################################################
-#00 09 10-20 3,5,8,11 1-5  . /home/pi/.profile; dart.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/opendart.conf --purpose=acnt --once
+15 18 * * 5 . /home/pi/.profile; flock -n /tmp/jwst.lock jwst --common-conf=$DEVEL_CFG/common.conf >> $CRON_LOG_DIR/jwst.log 2>&1
 
 #####################################################################
-# Yearly
 #####################################################################
-#00 09 1 1 *  . /home/pi/.profile; cd $DEVEL_HOME/services/holiday-kor/run.sh
-
-#####################################################################
-# every min
-#####################################################################
-#* * * * * /home/pi/prometheus/thermal.sh
-
-#####################################################################
-# every week (fri day)
-#####################################################################
-15 18 * * 5 . /home/pi/.profile; jwst --common-conf=$DEVEL_CFG/common.conf
-#00 12 * * 5 /home/pi/rpi-sync/rclone-sync.sh
+# Daily Collect Report (weekdays 18:00) - 수집주기별 현황 Slack 전송
+00 18 * * 1-5 . /home/pi/.profile; flock -n /tmp/collection-cycle-report.lock bash /home/pi/new-horizons/go-dev.v3/report/collection_cycle_report.sh >> $CRON_LOG_DIR/collection_cycle_report.log 2>&1
