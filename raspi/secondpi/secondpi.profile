@@ -34,3 +34,7 @@ alias mydba='sudo mysql -u root -p'
 alias mydbdump='mysqldump --login-path=stock --column-statistics=0 stock > stock.dump'
 alias mydbs='mysql --table --host=0.0.0.0 --port=3306 --user=stock -pmy@raspberry2 stock'
 alias mydbv='mysql --table --host=0.0.0.0 --port=3306 --user=vote -pmy@raspberry2 vote'
+
+
+# Added by Antigravity CLI installer
+export PATH="/home/pi/.local/bin:$PATH"
