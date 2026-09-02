@@ -96,3 +96,7 @@ alias cdsql='cd /home/pi/new-horizons/go-dev.v2/report/stock'
 export SMTP_USER="ironwin2@gmail.com"
 export SMTP_PASS="euuxzazmptzlyflb"
 export REPORT_TO="ironwin@ntels.com"
+
+
+# Added by Antigravity CLI installer
+export PATH="/home/pi/.local/bin:$PATH"

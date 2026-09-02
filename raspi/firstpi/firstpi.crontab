@@ -69,8 +69,9 @@ CRON_LOG_DIR=/home/pi/new-horizons/log/cron
 05 10 * * 1-5 . /home/pi/.profile; flock -n /tmp/bok-go-kr-daily.lock bok.go.kr --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=daily --since=7 >> $CRON_LOG_DIR/bok_daily.log 2>&1
 
 # failover 
-00 11 15 6 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260401,20240401 --task="11 26 27 28 29 30 31 36 41 43"
-00 09 16 6 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260501,20240501 --task="11 26 27 28 29 30 31 36 41 43"
+00 09 02 9 *   . /home/pi/.profile; data.go.kr.v3 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260701,20260701 --task="12"
+#00 11 15 6 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260401,20240401 --task="11 26 27 28 29 30 31 36 41 43"
+#00 09 16 6 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260501,20240501 --task="11 26 27 28 29 30 31 36 41 43"
 
 #####################################################################
 # Monthly Population (2nd Monday auto-scheduler)
