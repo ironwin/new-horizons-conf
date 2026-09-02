@@ -37,7 +37,7 @@ let config = {
             module: "MMM-MySlideshow",
             position: "fullscreen_below",
             config: {
-                imagePaths: ["/home/pi/Pictures"], // 사진 폴더 경로
+                imagePaths:['/media/pi/SSD-256-USB/PHOTOS/@IMG_DIR@'], // 사진 폴더 경로
                 slideshowSpeed: 10000,             // 슬라이드 시간 (ms)
 
                 // 1. 세로 사진 잘림 방지 (얼굴 확대 방지)
@@ -48,11 +48,21 @@ let config = {
                 // 2. 사진 정보 및 위치 표시 설정
                 showImageInfo: true,               // 정보 패널 활성화
                 imageInfo: "date, location",       // 표시할 항목: "name, date, location, imagecount" 중 선택
-                imageInfoLocation: "bottomRight",  // 위치: bottomRight, bottomLeft, topRight, topLeft
+                imageInfoLocation: "topLeft",  // 위치: bottomRight, bottomLeft, topRight, topLeft
                 dateTimeFormat: "YYYY년 M월 D일 HH:mm", // 날짜 표시 형식 (또는 "YYYY.MM.DD HH:mm")
                 locationLanguage: "ko",            // 지명 표시 언어 ("ko", "en" 등)
 
-                // 3. 기타 슬라이드쇼 옵션
+                // 3. 세로 사진 왼쪽 여백 지도 표시 설정
+                showPortraitMap: true,             // 세로 사진일 때 왼쪽 여백에 지도 표시
+                portraitMapPosition: "leftCenter", // 지도 위치: "leftCenter", "leftTop", "leftBottom"
+                portraitMapTileTheme: "dark",      // 지도 테마: "dark" (매직미러용 다크 테마), "voyager", "osm"
+                portraitMapApiKey: "cb1_2sbq_1_5ce7e2903fefa17bc3ed219d", // CartoDB API Key
+                portraitMapZoom: 6,                // 기본 지도 줌 (6: 국가 전체 뷰)
+                portraitMapFitCountry: true,       // 해당 국가 전체 영역 자동 맞춤 (기본값: true)
+                portraitMapHighlightCountry: true, // 사진 촬영 국가 영역 하이라이트 강조 (기본값: true)
+                portraitMapHighlightColor: "#00d2d3", // 하이라이트 색상 (청록/네온)
+
+                // 4. 기타 슬라이드쇼 옵션
                 randomizeImageOrder: true,
                 transitionImages: true
             }
