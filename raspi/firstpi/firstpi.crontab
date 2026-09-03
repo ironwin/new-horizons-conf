@@ -17,8 +17,8 @@
 #    - flock: 중복 실행 방지
 #
 # 4) Public data collection flow (weekdays)
-#    - data.go.kr.v3 daily: 17:00
-#    - data.go.kr.v3 exchange: 18:00
+#    - data.go.kr.v4 daily: 17:00
+#    - data.go.kr.v4 exchange: 18:00
 #    - bok.go.kr daily: 10:05
 #
 # 5) Maintenance flow
@@ -64,12 +64,13 @@ CRON_LOG_DIR=/home/pi/new-horizons/log/cron
 #####################################################################
 # Daily stock : data.go.kr / bok.go.kr
 #####################################################################
-00 17 * * 1-5 . /home/pi/.profile; flock -n /tmp/data-go-kr.lock data.go.kr.v3 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf >> $CRON_LOG_DIR/data_go_kr_daily.log 2>&1
-00 18 * * 1-5 . /home/pi/.profile; flock -n /tmp/data-go-kr-exchange.lock data.go.kr.v3 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=exchange --since=7 >> $CRON_LOG_DIR/data_go_kr_exchange.log 2>&1
+00 17 * * 1-5 . /home/pi/.profile; flock -n /tmp/data-go-kr.lock data.go.kr.v4 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf >> $CRON_LOG_DIR/data_go_kr_daily.log 2>&1
+00 18 * * 1-5 . /home/pi/.profile; flock -n /tmp/data-go-kr-exchange.lock data.go.kr.v4 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=exchange --since=7 >> $CRON_LOG_DIR/data_go_kr_exchange.log 2>&1
 05 10 * * 1-5 . /home/pi/.profile; flock -n /tmp/bok-go-kr-daily.lock bok.go.kr --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=daily --since=7 >> $CRON_LOG_DIR/bok_daily.log 2>&1
+35 17 * * 1-5 . /home/pi/.profile; flock -n /tmp/bitcoin.lock bitcoin --conf=$DEVEL_CFG/common.conf >> $CRON_LOG_DIR/bitcoin.log 2>&1
 
 # failover 
-00 09 02 9 *   . /home/pi/.profile; data.go.kr.v3 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260701,20260701 --task="12"
+00 09 02 9 *   . /home/pi/.profile; data.go.kr.v4 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260701,20260701 --task="12"
 #00 11 15 6 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260401,20240401 --task="11 26 27 28 29 30 31 36 41 43"
 #00 09 16 6 *  . /home/pi/.profile; data.go.kr.v2 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=population --range=20260501,20240501 --task="11 26 27 28 29 30 31 36 41 43"
 
@@ -80,7 +81,7 @@ CRON_LOG_DIR=/home/pi/new-horizons/log/cron
 #   - +2 biz days: population tasks 48 50 51 52
 #   State file: $DEVEL_LOG/population_cron_state.txt
 #####################################################################
-00 09 * * 1-5 . /home/pi/.profile; flock -n /tmp/population-cron.lock /home/pi/new-horizons/go-dev.v3/services/data.go.kr/svt/pp.cron.sh >> $CRON_LOG_DIR/population_cron.log 2>&1
+00 09 * * 1-5 . /home/pi/.profile; flock -n /tmp/population-cron.lock /home/pi/new-horizons/go-dev.v4/services/data.go.kr/svt/pp.cron.sh >> $CRON_LOG_DIR/population_cron.log 2>&1
 
 #####################################################################
 # Daily Cleanup
@@ -90,11 +91,13 @@ CRON_LOG_DIR=/home/pi/new-horizons/log/cron
 #####################################################################
 # Daily DB Backup
 #####################################################################
-05 19 * * * . /home/pi/.profile; cd $DEVEL_HOME/opt/db-backdup && flock -n /tmp/db-backup.lock ./daily_dump.sh >> $CRON_LOG_DIR/db_backup.log 2>&1
+05 19 * * * . /home/pi/.profile; cd /home/pi/new-horizons/opt/db-backdup && flock -n /tmp/db-backup.lock ./daily_dump.sh >> $CRON_LOG_DIR/db_backup.log 2>&1
 
 #####################################################################
 # Monthly
 #####################################################################
+20 20 25 * * . /home/pi/.profile; flock -n /tmp/bok-gindex.lock bok.go.kr --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=gindex --since=40 >> $CRON_LOG_DIR/bok_gindex.log 2>&1
+25 20 25 * * . /home/pi/.profile; flock -n /tmp/bok-mindex.lock bok.go.kr --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=mindex --since=40 >> $CRON_LOG_DIR/bok_mindex.log 2>&1
 30 20 25 * * . /home/pi/.profile; flock -n /tmp/bok-trends.lock bok.go.kr --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=trends --since=30 >> $CRON_LOG_DIR/bok_trends.log 2>&1
 
 #####################################################################
@@ -105,4 +108,4 @@ CRON_LOG_DIR=/home/pi/new-horizons/log/cron
 #####################################################################
 #####################################################################
 # Daily Collect Report (weekdays 18:00) - 수집주기별 현황 Slack 전송
-00 18 * * 1-5 . /home/pi/.profile; flock -n /tmp/collection-cycle-report.lock bash /home/pi/new-horizons/go-dev.v3/report/collection_cycle_report.sh >> $CRON_LOG_DIR/collection_cycle_report.log 2>&1
+00 18 * * 1-5 . /home/pi/.profile; flock -n /tmp/collection-cycle-report.lock bash /home/pi/new-horizons/go-dev.v4/report/collection_cycle_report.sh >> $CRON_LOG_DIR/collection_cycle_report.log 2>&1
