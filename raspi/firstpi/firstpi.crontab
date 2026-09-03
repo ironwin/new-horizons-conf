@@ -19,7 +19,7 @@
 # 4) Public data collection flow (weekdays)
 #    - data.go.kr.v4 daily: 17:00
 #    - data.go.kr.v4 exchange: 18:00
-#    - bok.go.kr daily: 10:05
+#    - bok.go.kr.v4 daily: 10:05
 #
 # 5) Maintenance flow
 #    - Daily cleanup: 매일 04:00, 5일 초과 로그 삭제
@@ -66,7 +66,7 @@ CRON_LOG_DIR=/home/pi/new-horizons/log/cron
 #####################################################################
 00 17 * * 1-5 . /home/pi/.profile; flock -n /tmp/data-go-kr.lock data.go.kr.v4 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf >> $CRON_LOG_DIR/data_go_kr_daily.log 2>&1
 00 18 * * 1-5 . /home/pi/.profile; flock -n /tmp/data-go-kr-exchange.lock data.go.kr.v4 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openapi.conf --purpose=exchange --since=7 >> $CRON_LOG_DIR/data_go_kr_exchange.log 2>&1
-05 10 * * 1-5 . /home/pi/.profile; flock -n /tmp/bok-go-kr-daily.lock bok.go.kr --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=daily --since=7 >> $CRON_LOG_DIR/bok_daily.log 2>&1
+05 10 * * 1-5 . /home/pi/.profile; flock -n /tmp/bok-go-kr-daily.lock bok.go.kr.v4 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=daily --since=7 >> $CRON_LOG_DIR/bok_daily.log 2>&1
 35 17 * * 1-5 . /home/pi/.profile; flock -n /tmp/bitcoin.lock bitcoin --conf=$DEVEL_CFG/common.conf >> $CRON_LOG_DIR/bitcoin.log 2>&1
 
 # failover 
@@ -96,9 +96,9 @@ CRON_LOG_DIR=/home/pi/new-horizons/log/cron
 #####################################################################
 # Monthly
 #####################################################################
-20 20 25 * * . /home/pi/.profile; flock -n /tmp/bok-gindex.lock bok.go.kr --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=gindex --since=40 >> $CRON_LOG_DIR/bok_gindex.log 2>&1
-25 20 25 * * . /home/pi/.profile; flock -n /tmp/bok-mindex.lock bok.go.kr --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=mindex --since=40 >> $CRON_LOG_DIR/bok_mindex.log 2>&1
-30 20 25 * * . /home/pi/.profile; flock -n /tmp/bok-trends.lock bok.go.kr --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=trends --since=30 >> $CRON_LOG_DIR/bok_trends.log 2>&1
+20 20 25 * * . /home/pi/.profile; flock -n /tmp/bok-gindex.lock bok.go.kr.v4 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=gindex --since=40 >> $CRON_LOG_DIR/bok_gindex.log 2>&1
+25 20 25 * * . /home/pi/.profile; flock -n /tmp/bok-mindex.lock bok.go.kr.v4 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=mindex --since=40 >> $CRON_LOG_DIR/bok_mindex.log 2>&1
+30 20 25 * * . /home/pi/.profile; flock -n /tmp/bok-trends.lock bok.go.kr.v4 --common-conf=$DEVEL_CFG/common.conf --openapi-conf=$DEVEL_CFG/openbok.conf --purpose=trends --since=30 >> $CRON_LOG_DIR/bok_trends.log 2>&1
 
 #####################################################################
 # Weekly (Friday)
