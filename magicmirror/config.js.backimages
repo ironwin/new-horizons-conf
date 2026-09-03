@@ -62,7 +62,16 @@ let config = {
                 portraitMapHighlightCountry: true, // 사진 촬영 국가 영역 하이라이트 강조 (기본값: true)
                 portraitMapHighlightColor: "#00d2d3", // 하이라이트 색상 (청록/네온)
 
-                // 4. 기타 슬라이드쇼 옵션
+                // 4. 세로 사진 오른쪽 여백 정보 표시 설정 (찍은 날짜, 도시, 국가명)
+                showPortraitInfo: true,            // 세로 사진일 때 오른쪽 여백에 찍은날짜, 도시, 국가명 크게 표시
+                portraitInfoStyle: "card",         // 스타일: "card" (반투명 카드), "transparent" (배경 없음)
+                portraitInfoOrder: "dateFirst",    // 순서: "dateFirst" (날짜 위, 위치 아래) 또는 "locationFirst"
+                portraitDateTimeFormat: "YYYY년 M월 D일", // 날짜 포맷
+                portraitTimeFormat: "HH:mm",       // 시간 포맷
+                portraitShowTime: true,            // 시간 표시 여부
+                hideImageInfoForPortrait: true,    // 세로 사진일 때 좌측 상단 중복 정보창 숨김
+
+                // 5. 기타 슬라이드쇼 옵션
                 randomizeImageOrder: true,
                 transitionImages: true
             }

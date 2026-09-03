@@ -1,0 +1,32 @@
+{
+	"name": "mmm-myslideshow",
+	"version": "1.0.0",
+	"description": "Custom fullscreen slideshow for MagicMirror² based on MMM-BackgroundSlideshow.",
+	"keywords": [
+		"magicmirror",
+		"background",
+		"slideshow"
+	],
+	"main": "MMM-MySlideshow.js",
+	"type": "commonjs",
+	"license": "MIT",
+	"dependencies": {
+		"exif-js": "^2.3.0",
+		"leaflet": "^1.9.4",
+		"sharp": "^0.34.3"
+	},
+	"devDependencies": {
+		"@eslint/css": "^0.10.0",
+		"@eslint/js": "^9.31.0",
+		"@eslint/markdown": "^7.0.0",
+		"@stylistic/eslint-plugin": "^5.1.0",
+		"eslint": "^9.31.0",
+		"eslint-plugin-import-x": "^4.16.1",
+		"globals": "^16.3.0",
+		"prettier": "^3.6.2"
+	},
+	"scripts": {
+		"lint": "prettier --check . && eslint",
+		"lint:fix": "prettier --write . && eslint --fix"
+	}
+}
