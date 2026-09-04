@@ -1,0 +1,472 @@
+/*
+ * MMM-SmartSlideshow.css
+ */
+
+.MMM-SmartSlideshow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.MMM-SmartSlideshow .images,
+.MMM-SmartSlideshow .image,
+.MMM-SmartSlideshow .image-blur-bg,
+.MMM-SmartSlideshow .transition {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.MMM-SmartSlideshow .image {
+  background-repeat: no-repeat;
+  z-index: 1;
+}
+
+.MMM-SmartSlideshow .image-blur-bg {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(25px) brightness(0.5);
+  transform: scale(1.05);
+  z-index: 0;
+}
+
+.MMM-SmartSlideshow .transition {
+  animation-timing-function: ease-out;
+}
+
+/* Transitions */
+@keyframes opacity {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes slideFromRight {
+  0% { left: 100%; }
+  100% { left: 0%; }
+}
+
+@keyframes slideFromLeft {
+  0% { left: -100%; }
+  100% { left: 0%; }
+}
+
+@keyframes slideFromTop {
+  0% { top: -100%; }
+  100% { top: 0%; }
+}
+
+@keyframes slideFromBottom {
+  0% { top: 100%; }
+  100% { top: 0%; }
+}
+
+@keyframes flipX {
+  0% { transform: rotateY(90deg); }
+  100% { transform: rotateY(0deg); }
+}
+
+@keyframes flipY {
+  0% { transform: rotateX(90deg); }
+  100% { transform: rotateX(0deg); }
+}
+
+/* Standard Info Panel (Landscape) */
+.MMM-SmartSlideshow .info {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 20px;
+  background-color: rgba(18, 20, 26, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  font-family: 'Roboto Condensed', sans-serif;
+  color: #fff;
+  position: absolute;
+  z-index: 10;
+  max-width: 480px;
+}
+
+.MMM-SmartSlideshow .info-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, rgba(255, 75, 75, 0.9), rgba(255, 140, 50, 0.9));
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  width: fit-content;
+  box-shadow: 0 2px 8px rgba(255, 75, 75, 0.4);
+}
+
+.MMM-SmartSlideshow .info-badge.folder-mode {
+  background: linear-gradient(135deg, rgba(0, 210, 211, 0.9), rgba(84, 160, 255, 0.9));
+  box-shadow: 0 2px 8px rgba(0, 210, 211, 0.4);
+}
+
+.MMM-SmartSlideshow .info-date {
+  font-size: 17px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.MMM-SmartSlideshow .info-location {
+  font-size: 15px;
+  color: #00d2d3;
+  font-weight: 500;
+}
+
+.MMM-SmartSlideshow .info-album {
+  font-size: 13px;
+  color: #aaa;
+}
+
+.MMM-SmartSlideshow .info-camera {
+  font-size: 12px;
+  color: #888;
+}
+
+.MMM-SmartSlideshow .info-count {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 4px;
+}
+
+.MMM-SmartSlideshow .topLeft { top: 24px; left: 24px; }
+.MMM-SmartSlideshow .topRight { top: 24px; right: 24px; }
+.MMM-SmartSlideshow .bottomLeft { bottom: 24px; left: 24px; }
+.MMM-SmartSlideshow .bottomRight { bottom: 24px; right: 24px; }
+
+/* Portrait Side Map Container */
+.MMM-SmartSlideshow .portrait-map-container {
+  position: absolute;
+  z-index: 10;
+  background: rgba(18, 20, 26, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  left: 24px;
+  top: 24px;
+  bottom: 24px;
+  height: calc(100% - 48px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), width 0.4s ease;
+  transform: scale(0.98);
+}
+
+.MMM-SmartSlideshow .portrait-map-container.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.MMM-SmartSlideshow .portrait-map-header {
+  flex-shrink: 0;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.MMM-SmartSlideshow .portrait-map-title {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #aaa;
+  margin-bottom: 4px;
+}
+
+.MMM-SmartSlideshow .portrait-map-location-text {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.MMM-SmartSlideshow .portrait-map-canvas {
+  width: 100%;
+  flex: 1 1 0;
+  min-height: 0;
+  background-color: #121212;
+}
+
+/* Pulsing Leaflet Marker */
+.MMM-SmartSlideshow .map-pulse-marker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: -12px;
+  margin-top: -12px;
+}
+
+.MMM-SmartSlideshow .pulse-dot {
+  width: 14px;
+  height: 14px;
+  background: #ff3b30;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255, 59, 48, 0.9);
+  position: absolute;
+  z-index: 2;
+  top: 5px;
+  left: 5px;
+}
+
+.MMM-SmartSlideshow .pulse-ring {
+  width: 32px;
+  height: 32px;
+  border: 2px solid rgba(255, 59, 48, 0.8);
+  background-color: rgba(255, 59, 48, 0.25);
+  border-radius: 50%;
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  animation: mapPulse 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  z-index: 1;
+}
+
+@keyframes mapPulse {
+  0% { transform: scale(0.4); opacity: 1; }
+  70% { transform: scale(1.4); opacity: 0; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* Portrait Side Info Container (Right Margin) */
+.MMM-SmartSlideshow .portrait-info-container {
+  position: absolute;
+  z-index: 10;
+  background: rgba(18, 20, 26, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 40px 32px;
+  right: 24px;
+  top: 24px;
+  bottom: 24px;
+  height: calc(100% - 48px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), width 0.4s ease;
+  transform: scale(0.98);
+}
+
+.MMM-SmartSlideshow .portrait-info-container.transparent {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+  box-shadow: none;
+}
+
+.MMM-SmartSlideshow .portrait-info-container.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.MMM-SmartSlideshow .portrait-info-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+}
+
+/* Badge in Portrait Card */
+.MMM-SmartSlideshow .portrait-info-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 20px;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, rgba(255, 75, 75, 0.9), rgba(255, 140, 50, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 30px;
+  box-shadow: 0 4px 16px rgba(255, 75, 75, 0.45);
+  font-family: 'Roboto Condensed', 'Noto Sans KR', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.MMM-SmartSlideshow .portrait-info-badge.folder-mode {
+  background: linear-gradient(135deg, rgba(0, 210, 211, 0.9), rgba(84, 160, 255, 0.9));
+  box-shadow: 0 4px 16px rgba(0, 210, 211, 0.45);
+}
+
+.MMM-SmartSlideshow .portrait-info-date-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+}
+
+.MMM-SmartSlideshow .portrait-info-date {
+  font-family: 'Roboto Condensed', 'Noto Sans KR', sans-serif;
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #ffffff;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95);
+  word-break: keep-all;
+  letter-spacing: -0.5px;
+}
+
+.MMM-SmartSlideshow .portrait-info-time {
+  font-family: 'Roboto Condensed', 'Noto Sans KR', sans-serif;
+  font-size: 26px;
+  font-weight: 300;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.82);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+  margin-top: 6px;
+  letter-spacing: 1.5px;
+}
+
+.MMM-SmartSlideshow .portrait-info-divider {
+  width: 64px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.35);
+  margin: 32px auto;
+  border-radius: 2px;
+}
+
+.MMM-SmartSlideshow .portrait-info-location-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+}
+
+.MMM-SmartSlideshow .portrait-info-city {
+  font-family: 'Roboto Condensed', 'Noto Sans KR', sans-serif;
+  font-size: 46px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #ffffff;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.95);
+  word-break: keep-all;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+
+.MMM-SmartSlideshow .portrait-info-country {
+  font-family: 'Roboto Condensed', 'Noto Sans KR', sans-serif;
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+  letter-spacing: 1px;
+}
+
+.MMM-SmartSlideshow .portrait-info-meta-wrapper {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+.MMM-SmartSlideshow .portrait-info-album {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 16px;
+  color: #00d2d3;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.MMM-SmartSlideshow .portrait-info-camera {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 14px;
+  color: #aaa;
+  font-weight: 400;
+}
+
+/* Empty Notice */
+.MMM-SmartSlideshow .empty-notice {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(18, 20, 26, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
+  padding: 40px 48px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+}
+
+.MMM-SmartSlideshow .empty-notice-icon {
+  font-size: 54px;
+  margin-bottom: 12px;
+}
+
+.MMM-SmartSlideshow .empty-notice-title {
+  font-family: 'Roboto Condensed', 'Noto Sans KR', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.MMM-SmartSlideshow .empty-notice-msg {
+  font-family: 'Roboto Condensed', 'Noto Sans KR', sans-serif;
+  font-size: 20px;
+  color: #bbb;
+}

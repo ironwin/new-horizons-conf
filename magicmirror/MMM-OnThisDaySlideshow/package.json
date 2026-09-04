@@ -1,0 +1,21 @@
+{
+  "name": "mmm-onthisdayslideshow",
+  "version": "1.0.0",
+  "description": "MagicMirror² module to show photos taken on this day in history from MariaDB photo database, with rich MMM-MySlideshow presentation.",
+  "keywords": [
+    "magicmirror",
+    "slideshow",
+    "on-this-day",
+    "mariadb",
+    "photo-database"
+  ],
+  "main": "MMM-OnThisDaySlideshow.js",
+  "type": "commonjs",
+  "license": "MIT",
+  "dependencies": {
+    "exif-js": "^2.3.0",
+    "leaflet": "^1.9.4",
+    "mysql2": "^3.24.3",
+    "sharp": "^0.33.5"
+  }
+}

@@ -26,3 +26,8 @@
 # Daily Cleanup
 #####################################################################
 00 21 * * * /home/pi/cleanup_backup.sh >> /home/pi/cleanup_backup.log 2>&1
+
+#####################################################################
+# Weekly DB Restore (Stock, Vote)
+#####################################################################
+00 20 * * 5 /home/pi/restore_backup.sh >> /home/pi/restore_backup.log 2>&1

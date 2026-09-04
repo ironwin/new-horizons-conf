@@ -1,0 +1,21 @@
+{
+  "name": "mmm-smartslideshow",
+  "version": "1.0.0",
+  "description": "Smart hybrid slideshow for MagicMirror²: displays photos taken on this day from MariaDB photo database first, and switches to local folder photos when finished or none found.",
+  "keywords": [
+    "magicmirror",
+    "slideshow",
+    "on-this-day",
+    "hybrid",
+    "photo-database"
+  ],
+  "main": "MMM-SmartSlideshow.js",
+  "type": "commonjs",
+  "license": "MIT",
+  "dependencies": {
+    "exif-js": "^2.3.0",
+    "leaflet": "^1.9.4",
+    "mysql2": "^3.12.0",
+    "sharp": "^0.33.5"
+  }
+}
