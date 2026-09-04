@@ -22,7 +22,7 @@
 #    - bok.go.kr.v4 daily: 10:05
 #
 # 5) Maintenance flow
-#    - Daily cleanup: 매일 04:00, 5일 초과 로그 삭제
+#    - Daily cleanup: 매일 19:30, 7일 이전 파일 삭제
 #    - Daily DB backup: 매일 19:05
 #
 # 6) Long-cycle flow
@@ -86,7 +86,8 @@ CRON_LOG_DIR=/home/pi/new-horizons/log/cron
 #####################################################################
 # Daily Cleanup
 #####################################################################
-00 04 * * * find /home/pi/new-horizons/log -type f -mtime +5 -exec rm {} \;
+#00 04 * * * find /home/pi/new-horizons/log -type f -mtime +5 -exec rm {} \;
+30 19 * * * find /home/pi/new-horizons/log -type f -mtime +7 -exec rm -f {} \;
 
 #####################################################################
 # Daily DB Backup
@@ -109,3 +110,8 @@ CRON_LOG_DIR=/home/pi/new-horizons/log/cron
 #####################################################################
 # Daily Collect Report (weekdays 18:00) - 수집주기별 현황 Slack 전송
 00 18 * * 1-5 . /home/pi/.profile; flock -n /tmp/collection-cycle-report.lock bash /home/pi/new-horizons/go-dev.v4/report/collection_cycle_report.sh >> $CRON_LOG_DIR/collection_cycle_report.log 2>&1
+
+#####################################################################
+# Frontend Sync to secondpi (Daily 19:00, if changed)
+#####################################################################
+00 19 * * * . /home/pi/.profile; flock -n /tmp/frontend-sync.lock /home/pi/new-horizons/frontend/sync_to_secondpi.sh >> $CRON_LOG_DIR/frontend_sync.log 2>&1
