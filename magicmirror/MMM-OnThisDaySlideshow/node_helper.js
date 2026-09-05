@@ -131,7 +131,7 @@ module.exports = NodeHelper.create({
   // Get current target Month and Day (respecting mockDate if set)
   getTargetDate() {
     const now = new Date();
-    const dateRangeDays = typeof this.config?.dateRangeDays === 'number' ? this.config.dateRangeDays : 7;
+    const dateRangeDays = typeof this.config?.dateRangeDays === 'number' ? this.config.dateRangeDays : 0;
 
     if (this.config && this.config.mockDate) {
       const parts = this.config.mockDate.split('-');
@@ -265,13 +265,8 @@ module.exports = NodeHelper.create({
   // Gather and prepare image list
   async gatherImageList(sendNotification = false) {
     const rawList = await this.queryPhotos();
-    
-    let processedList = rawList;
-    if (this.config.randomizeImageOrder) {
-      processedList = this.shuffleArray(processedList);
-    }
-
-    this.imageList = processedList;
+    // Sort in ascending date order (earliest/oldest photos first)
+    this.imageList = rawList.sort((a, b) => new Date(a.taken_at) - new Date(b.taken_at));
     this.index = 0;
     this.currentDateKey = this.getTargetDate().dateStr;
 

@@ -38,8 +38,8 @@ let config = {
 				imagePaths: ['/media/pi/SSD-256-USB/PHOTOS/@IMG_DIR@'],
 				recursiveSubDirectories: true,
 
-				// 3. 과거의 오늘 검색 범위 (기본값: 7 = 오늘 기준 1주일 전/후 포함)
-				dateRangeDays: 7,
+				// 3. 과거의 오늘 검색 범위 (0: 당일 날짜만 조회)
+				dateRangeDays: 0,
 
 				// 테스트용 날짜 (null이면 실제 오늘 날짜 사용 / 예: "09-16", "05-28")
 				mockDate: null,

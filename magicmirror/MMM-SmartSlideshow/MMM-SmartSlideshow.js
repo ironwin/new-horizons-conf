@@ -22,9 +22,9 @@ Module.register('MMM-SmartSlideshow', {
     recursiveSubDirectories: true,
     validImageFileExtensions: 'bmp,jpg,jpeg,gif,png',
 
-    // 3. On-This-Day date range (default: 7 = 1 week before and after)
-    // 0 = exact today only, 7 = 1 week before/after
-    dateRangeDays: 7,
+    // 3. On-This-Day date range (default: 0 = exact today only)
+    // 0 = exact today only, N = N days before/after
+    dateRangeDays: 0,
 
     // For testing/previewing a specific date (format: "MM-DD", e.g. "09-16" or "05-28", or null for real today)
     mockDate: null,

@@ -137,7 +137,7 @@ module.exports = NodeHelper.create({
 
   getTargetDate() {
     const now = new Date();
-    const dateRangeDays = typeof this.config?.dateRangeDays === 'number' ? this.config.dateRangeDays : 7;
+    const dateRangeDays = typeof this.config?.dateRangeDays === 'number' ? this.config.dateRangeDays : 0;
 
     if (this.config && this.config.mockDate) {
       const parts = this.config.mockDate.split('-');
@@ -331,7 +331,8 @@ module.exports = NodeHelper.create({
   // Initialize both playlists and set initial mode
   async initializePlaylists(sendNotification = false) {
     const rawOnThisDay = await this.gatherOnThisDayPhotos();
-    this.onThisDayList = this.config?.randomizeImageOrder ? this.shuffleArray(rawOnThisDay) : rawOnThisDay;
+    // Sort On-This-Day photos in ascending date order (earliest/oldest photos first)
+    this.onThisDayList = rawOnThisDay.sort((a, b) => new Date(a.taken_at) - new Date(b.taken_at));
     this.onThisDayIndex = 0;
     this.onThisDayCompleted = false;
 

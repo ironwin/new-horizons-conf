@@ -16,9 +16,9 @@ Module.register('MMM-OnThisDaySlideshow', {
       database: 'photo'
     },
 
-    // Date range: days before and after today to include (default: 7 = 1 week before/after)
-    // 0 = exact today only, 7 = 1 week before/after
-    dateRangeDays: 7,
+    // Date range: days before and after today to include (default: 0 = exact today only)
+    // 0 = exact today only, N = N days before/after
+    dateRangeDays: 0,
 
     // Slideshow interval (ms)
     slideshowSpeed: 10 * 1000,
