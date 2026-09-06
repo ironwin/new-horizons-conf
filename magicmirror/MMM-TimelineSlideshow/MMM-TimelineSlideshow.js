@@ -19,12 +19,17 @@ Module.register('MMM-TimelineSlideshow', {
     },
 
     // 2. Timeline grouping & selection
-    photosPerMonth: 10,       // 월별 랜덤 추출할 사진 수 (기본값: 10)
-    minPhotosPerMonth: 11,    // 월간 사진 수가 10장 이하인 월 제외 (여행 사진이 아닌 월 제외)
+    groupBy: 'day',           // 'day': 일별 그룹화, 'month': 월별 그룹화
+    photosPerPeriod: 10,      // 그룹별 추출할 사진 수 (기본값: 10)
+    photosPerDay: 10,         // 일별 사진 수 (기본값: 10)
+    photosPerMonth: 10,       // 월별 사진 수 (기본값: 10)
+    minPhotosPerPeriod: 10,   // 최소 사진 수 (10장 미만인 일/월 제외)
+    minPhotosPerDay: 10,      // 일간 사진 수 10장 미만인 날 제외
+    minPhotosPerMonth: 11,    // 월간 사진 수가 10장 이하인 월 제외
     sortOrder: 'asc',         // 'asc': 과거 -> 현재(시간순), 'desc': 현재 -> 과거
-    sortWithinMonth: 'asc',   // 'asc': 해당 월 내 시간순, 'random': 해당 월 내 무작위
+    sortWithinMonth: 'asc',   // 'asc': 해당 기간 내 시간순, 'random': 해당 기간 내 무작위
     avoidRecentPhotos: true,  // 실행마다 중복 없이 새로운 미표시 사진 우선 선택
-    resumeTimeline: true,     // 재실행 시 이전 마지막 월의 다음 월부터 이어서 재생 (항상 첫 월부터 반복 방지)
+    resumeTimeline: true,     // 재실행 시 이전 마지막 기간의 다음부터 이어서 재생
     minYear: null,            // 특정 연도 이후만 표시할 경우 (예: 2015)
     maxYear: null,            // 특정 연도 이전만 표시할 경우 (예: 2025)
     resortOnLoop: true,       // 전체 타임라인 1주기 완료 시 새로운 랜덤 10장씩 다시 추출
@@ -214,7 +219,9 @@ Module.register('MMM-TimelineSlideshow', {
 
   socketNotificationReceived(notification, payload) {
     if (notification === 'TIMELINESLIDESHOW_INITIALIZED') {
-      Log.info(`[MMM-TimelineSlideshow] Initialized: ${payload.totalPhotos} photos (${payload.firstYm} ~ ${payload.lastYm})`);
+      const first = payload.firstPeriod || payload.firstYm || '';
+      const last = payload.lastPeriod || payload.lastYm || '';
+      Log.info(`[MMM-TimelineSlideshow] Initialized: ${payload.totalPhotos} photos (${first} ~ ${last})`);
     } else if (notification === 'TIMELINESLIDESHOW_FILE') {
       if (!payload.identifier || payload.identifier === this.identifier) {
         if (this.emptyNoticeDiv) {
@@ -619,9 +626,9 @@ Module.register('MMM-TimelineSlideshow', {
     city.textContent = locText;
 
     if (photo.timelineIndex && photo.timelineTotal) {
-      meta.textContent = `타임라인 [${photo.timelineIndex} / ${photo.timelineTotal}] · ${photo.ym || ''}`;
-    } else if (photo.ym) {
-      meta.textContent = photo.ym;
+      meta.textContent = `타임라인 [${photo.timelineIndex} / ${photo.timelineTotal}] · ${photo.period || photo.ym || ''}`;
+    } else if (photo.period || photo.ym) {
+      meta.textContent = photo.period || photo.ym;
     } else {
       meta.textContent = '';
     }
@@ -993,15 +1000,17 @@ Module.register('MMM-TimelineSlideshow', {
   getTimelineBadgeHtml(photo) {
     if (!photo) return '';
 
-    let ymLabel = photo.ym || '';
+    let dateLabel = photo.period || photo.ym || '';
     if (photo.taken_at) {
       const m = moment(photo.taken_at);
       if (m.isValid()) {
-        ymLabel = m.format(this.config.timelineBadgeFormat || 'YYYY년 M월');
+        const isDaily = (this.config.groupBy || 'day') === 'day';
+        const defaultFormat = isDaily ? 'YYYY년 M월 D일' : 'YYYY년 M월';
+        dateLabel = m.format(this.config.timelineBadgeFormat || defaultFormat);
       }
     }
 
-    const monthCount = `(${photo.monthIndex || 1} / ${photo.monthTotal || 5})`;
+    const countLabel = `(${photo.periodIndex || photo.monthIndex || 1} / ${photo.periodTotal || photo.monthTotal || 10})`;
     const overall = this.config.showOverallProgress && photo.timelineIndex && photo.timelineTotal
       ? `<span class="timeline-overall">[${photo.timelineIndex} / ${photo.timelineTotal}]</span>`
       : '';
@@ -1013,8 +1022,8 @@ Module.register('MMM-TimelineSlideshow', {
     return `
       <div class="timeline-badge">
         <span class="timeline-icon">⏳</span>
-        <span class="timeline-year-month">${ymLabel}</span>
-        <span class="timeline-month-count">${monthCount}</span>
+        <span class="timeline-year-month">${dateLabel}</span>
+        <span class="timeline-month-count">${countLabel}</span>
         ${overall}
         ${yearsAgo}
       </div>

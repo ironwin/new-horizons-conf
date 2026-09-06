@@ -73,6 +73,7 @@ module.exports = NodeHelper.create({
     this.timer = null;
     this.locationCache = new Map();
     this.endpointRegistered = false;
+    this.lastRecordedPeriod = null;
     this.lastRecordedYm = null;
   },
 
@@ -126,14 +127,15 @@ module.exports = NodeHelper.create({
         const raw = fs.readFileSync(filePath, 'utf8');
         const parsed = JSON.parse(raw);
         return {
-          lastYm: parsed.lastYm || '',
+          lastPeriod: parsed.lastPeriod || parsed.lastYm || '',
+          lastYm: parsed.lastPeriod || parsed.lastYm || '',
           shownPhotoIds: parsed.shownPhotoIds || {}
         };
       }
     } catch (err) {
       Log.warn('[MMM-TimelineSlideshow] Failed to load timeline_state.json:', err.message);
     }
-    return { lastYm: '', shownPhotoIds: {} };
+    return { lastPeriod: '', lastYm: '', shownPhotoIds: {} };
   },
 
   saveState(state) {
@@ -154,7 +156,7 @@ module.exports = NodeHelper.create({
     return arr;
   },
 
-  // Query MariaDB for random photos per Year-Month and build timeline
+  // Query MariaDB for random photos per Day or Month and build timeline
   async fetchTimelinePhotos() {
     if (!this.pool) {
       Log.error('[MMM-TimelineSlideshow] DB pool not initialized.');
@@ -162,14 +164,23 @@ module.exports = NodeHelper.create({
     }
 
     const config = this.config || {};
-    const photosPerMonth = parseInt(config.photosPerMonth || 10, 10);
+    const groupBy = (config.groupBy || 'day').toLowerCase(); // 'day' or 'month'
+    const isDaily = (groupBy === 'day');
+
+    const photosPerPeriod = parseInt(
+      (isDaily ? (config.photosPerDay || config.photosPerMonth) : config.photosPerMonth) || 10,
+      10
+    );
+    const minPhotosPerPeriod = parseInt(
+      (isDaily ? (config.minPhotosPerDay || config.minPhotosPerPeriod || 10) : (config.minPhotosPerMonth || config.minMonthlyPhotos || 11)),
+      10
+    );
     const sortOrder = (config.sortOrder || 'asc').toLowerCase() === 'desc' ? 'DESC' : 'ASC';
-    const sortWithinMonth = (config.sortWithinMonth || 'asc').toLowerCase();
-    const minPhotosPerMonth = parseInt(config.minPhotosPerMonth || config.minMonthlyPhotos || 11, 10);
+    const sortWithinPeriod = (config.sortWithinPeriod || config.sortWithinMonth || 'asc').toLowerCase();
     const avoidRecentPhotos = config.avoidRecentPhotos !== false;
 
-    // Query extra photos per month to guarantee enough fresh candidates
-    const candidateLimit = Math.max(photosPerMonth * 8, 80);
+    // Query extra photos per period to guarantee enough fresh candidates
+    const candidateLimit = isDaily ? Math.max(photosPerPeriod * 4, 35) : Math.max(photosPerPeriod * 8, 80);
 
     let yearFilterSql = '';
     let excludeFilterSql = '';
@@ -206,29 +217,31 @@ module.exports = NodeHelper.create({
       excludeFilterSql = ' AND ' + conditions.join(' AND ');
     }
 
-    queryParams.push(minPhotosPerMonth);
+    queryParams.push(minPhotosPerPeriod);
     queryParams.push(candidateLimit);
 
+    const periodExpr = isDaily ? "DATE_FORMAT(taken_at, '%Y-%m-%d')" : "DATE_FORMAT(taken_at, '%Y-%m')";
+
     const sql = `
-      SELECT ym, id, album, filename, filepath, file_size, taken_at, date_str, time_str,
+      SELECT period, id, album, filename, filepath, file_size, taken_at, date_str, time_str,
              camera_make, camera_model, lens_model, focal_length, f_number, exposure_time, iso,
-             width, height, orientation, is_portrait, has_gps, latitude, longitude, altitude, ym_cnt
+             width, height, orientation, is_portrait, has_gps, latitude, longitude, altitude, period_cnt
       FROM (
-        SELECT DATE_FORMAT(taken_at, '%Y-%m') as ym,
+        SELECT ${periodExpr} as period,
                id, album, filename, filepath, file_size, taken_at, date_str, time_str,
                camera_make, camera_model, lens_model, focal_length, f_number, exposure_time, iso,
                width, height, orientation, is_portrait, has_gps, latitude, longitude, altitude,
-               COUNT(*) OVER (PARTITION BY DATE_FORMAT(taken_at, '%Y-%m')) as ym_cnt,
-               ROW_NUMBER() OVER (PARTITION BY DATE_FORMAT(taken_at, '%Y-%m') ORDER BY RAND()) as rn
+               COUNT(*) OVER (PARTITION BY ${periodExpr}) as period_cnt,
+               ROW_NUMBER() OVER (PARTITION BY ${periodExpr} ORDER BY RAND()) as rn
         FROM photos
         WHERE taken_at IS NOT NULL ${yearFilterSql} ${excludeFilterSql} ${koreaFilterSql}
       ) sub
-      WHERE ym_cnt >= ? AND rn <= ?
-      ORDER BY ym ${sortOrder}, taken_at ASC
+      WHERE period_cnt >= ? AND rn <= ?
+      ORDER BY period ${sortOrder}, taken_at ASC
     `;
 
     try {
-      Log.info(`[MMM-TimelineSlideshow] Querying timeline photos (perMonth: ${photosPerMonth}, minMonthlyPhotos: ${minPhotosPerMonth}, order: ${sortOrder}, excludeKorea: ${excludeKorea})...`);
+      Log.info(`[MMM-TimelineSlideshow] Querying timeline photos (groupBy: ${groupBy}, perPeriod: ${photosPerPeriod}, minPhotos: ${minPhotosPerPeriod}, order: ${sortOrder}, excludeKorea: ${excludeKorea})...`);
       const startTime = Date.now();
       const [rows] = await this.pool.query(sql, queryParams);
       Log.info(`[MMM-TimelineSlideshow] DB returned ${rows.length} candidate rows in ${Date.now() - startTime}ms.`);
@@ -236,16 +249,11 @@ module.exports = NodeHelper.create({
       const state = this.loadState();
       if (!state.shownPhotoIds) state.shownPhotoIds = {};
 
-      // Group by ym and filter files existing on disk and not in excluded albums
-      const monthCandidates = new Map();
+      // Group by period and filter out excluded albums and locations
+      const periodCandidates = new Map();
       for (const r of rows) {
-        if (!monthCandidates.has(r.ym)) {
-          monthCandidates.set(r.ym, []);
-        }
-        try {
-          if (!fs.existsSync(r.filepath)) continue;
-        } catch {
-          continue;
+        if (!periodCandidates.has(r.period)) {
+          periodCandidates.set(r.period, []);
         }
 
         const isExcluded = excludeAlbums.some(kw =>
@@ -260,53 +268,78 @@ module.exports = NodeHelper.create({
           }
         }
 
-        monthCandidates.get(r.ym).push(r);
+        periodCandidates.get(r.period).push(r);
       }
 
-      // Pick photos avoiding recently shown ones
-      const monthMap = new Map();
-      for (const [ym, candidates] of monthCandidates.entries()) {
+      // Pick photos avoiding recently shown ones, validating file existence on demand
+      const periodMap = new Map();
+      for (const [period, candidates] of periodCandidates.entries()) {
         if (!candidates || candidates.length === 0) continue;
 
         let selected = [];
         if (avoidRecentPhotos) {
-          const seenIds = new Set(state.shownPhotoIds[ym] || []);
+          const seenIds = new Set(state.shownPhotoIds[period] || []);
           const unseen = candidates.filter(c => !seenIds.has(c.id));
-          if (unseen.length >= photosPerMonth) {
-            selected = unseen.slice(0, photosPerMonth);
-            selected.forEach(p => seenIds.add(p.id));
-            state.shownPhotoIds[ym] = Array.from(seenIds);
-          } else {
-            // Use all remaining unseen photos first
-            selected = [...unseen];
-            const needed = photosPerMonth - selected.length;
-            const seen = candidates.filter(c => seenIds.has(c.id));
-            const additional = this.shuffleArray(seen).slice(0, needed);
+          if (unseen.length >= photosPerPeriod) {
+            const valid = [];
+            for (const p of unseen) {
+              try {
+                if (fs.existsSync(p.filepath)) valid.push(p);
+              } catch {}
+              if (valid.length >= photosPerPeriod) break;
+            }
+            if (valid.length >= photosPerPeriod) {
+              selected = valid;
+              selected.forEach(p => seenIds.add(p.id));
+              state.shownPhotoIds[period] = Array.from(seenIds);
+            }
+          }
+
+          if (selected.length === 0) {
+            const validCandidates = [];
+            for (const p of candidates) {
+              try {
+                if (fs.existsSync(p.filepath)) validCandidates.push(p);
+              } catch {}
+            }
+            const validUnseen = validCandidates.filter(c => !seenIds.has(c.id));
+            selected = [...validUnseen];
+            const needed = photosPerPeriod - selected.length;
+            const validSeen = validCandidates.filter(c => seenIds.has(c.id));
+            const additional = this.shuffleArray(validSeen).slice(0, needed);
             selected = selected.concat(additional);
-            // Reset seen IDs for this month with the newly chosen batch
-            state.shownPhotoIds[ym] = selected.map(p => p.id);
+            state.shownPhotoIds[period] = selected.map(p => p.id);
           }
         } else {
-          selected = candidates.slice(0, photosPerMonth);
+          const valid = [];
+          for (const p of candidates) {
+            try {
+              if (fs.existsSync(p.filepath)) valid.push(p);
+            } catch {}
+            if (valid.length >= photosPerPeriod) break;
+          }
+          selected = valid;
         }
 
-        monthMap.set(ym, selected);
+        if (selected.length > 0) {
+          periodMap.set(period, selected);
+        }
       }
 
       this.saveState(state);
 
-      // Sort or shuffle within each month if configured
+      // Sort or shuffle within each period if configured
       const sortedPlaylist = [];
-      const monthKeys = Array.from(monthMap.keys());
+      const periodKeys = Array.from(periodMap.keys());
       if (sortOrder === 'DESC') {
-        monthKeys.sort((a, b) => b.localeCompare(a));
+        periodKeys.sort((a, b) => b.localeCompare(a));
       } else {
-        monthKeys.sort((a, b) => a.localeCompare(b));
+        periodKeys.sort((a, b) => a.localeCompare(b));
       }
 
-      for (const ym of monthKeys) {
-        let photos = monthMap.get(ym);
-        if (sortWithinMonth === 'random') {
+      for (const period of periodKeys) {
+        let photos = periodMap.get(period);
+        if (sortWithinPeriod === 'random') {
           photos = this.shuffleArray(photos);
         } else {
           photos.sort((a, b) => new Date(a.taken_at) - new Date(b.taken_at));
@@ -315,9 +348,13 @@ module.exports = NodeHelper.create({
         photos.forEach((p, idx) => {
           sortedPlaylist.push({
             ...p,
-            ym: ym,
-            monthIndex: idx + 1,
-            monthTotal: photos.length
+            period: period,
+            ym: period, // for backward compatibility with frontend
+            date_str: p.date_str || period,
+            monthIndex: idx + 1, // for backward compatibility
+            monthTotal: photos.length,
+            periodIndex: idx + 1,
+            periodTotal: photos.length
           });
         });
       }
@@ -330,9 +367,10 @@ module.exports = NodeHelper.create({
       });
 
       if (sortedPlaylist.length > 0) {
-        const firstYm = sortedPlaylist[0].ym;
-        const lastYm = sortedPlaylist[sortedPlaylist.length - 1].ym;
-        Log.info(`[MMM-TimelineSlideshow] Successfully built timeline: ${totalCount} photos across ${monthKeys.length} months (${firstYm} ~ ${lastYm}).`);
+        const firstPeriod = sortedPlaylist[0].period;
+        const lastPeriod = sortedPlaylist[sortedPlaylist.length - 1].period;
+        const unitName = isDaily ? 'days' : 'months';
+        Log.info(`[MMM-TimelineSlideshow] Successfully built timeline: ${totalCount} photos across ${periodKeys.length} ${unitName} (${firstPeriod} ~ ${lastPeriod}).`);
       } else {
         Log.warn('[MMM-TimelineSlideshow] No timeline photos found matching criteria.');
       }
@@ -364,16 +402,17 @@ module.exports = NodeHelper.create({
     const resumeTimeline = this.config?.resumeTimeline !== false;
     if (resumeTimeline) {
       const state = this.loadState();
-      if (state.lastYm && this.timelineList.length > 0) {
-        // Find the first photo of the next month after state.lastYm
-        const nextMonthIdx = this.timelineList.findIndex(item => item.ym > state.lastYm);
-        if (nextMonthIdx !== -1) {
-          this.timelineIndex = nextMonthIdx;
-          Log.info(`[MMM-TimelineSlideshow] Resuming timeline from ${this.timelineList[nextMonthIdx].ym} (index ${nextMonthIdx + 1}/${this.timelineList.length}) based on last played month ${state.lastYm}.`);
+      const lastPeriod = state.lastPeriod || state.lastYm;
+      if (lastPeriod && this.timelineList.length > 0) {
+        // Find the first photo of the next period after lastPeriod
+        const nextPeriodIdx = this.timelineList.findIndex(item => item.period > lastPeriod);
+        if (nextPeriodIdx !== -1) {
+          this.timelineIndex = nextPeriodIdx;
+          Log.info(`[MMM-TimelineSlideshow] Resuming timeline from ${this.timelineList[nextPeriodIdx].period} (index ${nextPeriodIdx + 1}/${this.timelineList.length}) based on last played period ${lastPeriod}.`);
         } else {
-          // Wrapped around: lastYm was the last month or beyond, start from beginning
+          // Wrapped around: lastPeriod was the last period or beyond, start from beginning
           this.timelineIndex = 0;
-          Log.info(`[MMM-TimelineSlideshow] Last played month was ${state.lastYm}. Reached end of timeline, starting from beginning ${this.timelineList[0].ym}.`);
+          Log.info(`[MMM-TimelineSlideshow] Last played period was ${lastPeriod}. Reached end of timeline, starting from beginning ${this.timelineList[0].period}.`);
         }
       }
     }
@@ -381,8 +420,10 @@ module.exports = NodeHelper.create({
     this.sendSocketNotification('TIMELINESLIDESHOW_INITIALIZED', {
       identifier: this.config?.identifier,
       totalPhotos: this.timelineList.length,
-      firstYm: this.timelineList[0]?.ym,
-      lastYm: this.timelineList[this.timelineList.length - 1]?.ym,
+      firstPeriod: this.timelineList[0]?.period,
+      lastPeriod: this.timelineList[this.timelineList.length - 1]?.period,
+      firstYm: this.timelineList[0]?.period,
+      lastYm: this.timelineList[this.timelineList.length - 1]?.period,
       startIndex: this.timelineIndex
     });
   },
@@ -401,6 +442,7 @@ module.exports = NodeHelper.create({
       if (this.config?.resortOnLoop !== false) {
         Log.info('[MMM-TimelineSlideshow] Finished one complete timeline cycle! Fetching a new random batch for the next cycle...');
         const state = this.loadState();
+        state.lastPeriod = '';
         state.lastYm = '';
         this.saveState(state);
         this.initializeTimeline().then(() => {
@@ -411,12 +453,14 @@ module.exports = NodeHelper.create({
     }
 
     const currentItem = this.timelineList[this.timelineIndex++];
-    Log.info(`[MMM-TimelineSlideshow] [${currentItem.timelineIndex}/${currentItem.timelineTotal}] [${currentItem.ym} ${currentItem.monthIndex}/${currentItem.monthTotal}] ${currentItem.filename}`);
+    Log.info(`[MMM-TimelineSlideshow] [${currentItem.timelineIndex}/${currentItem.timelineTotal}] [${currentItem.period} ${currentItem.monthIndex}/${currentItem.monthTotal}] ${currentItem.filename}`);
 
-    if (this.lastRecordedYm !== currentItem.ym) {
-      this.lastRecordedYm = currentItem.ym;
+    if (this.lastRecordedPeriod !== currentItem.period) {
+      this.lastRecordedPeriod = currentItem.period;
+      this.lastRecordedYm = currentItem.period;
       const state = this.loadState();
-      state.lastYm = currentItem.ym;
+      state.lastPeriod = currentItem.period;
+      state.lastYm = currentItem.period;
       this.saveState(state);
     }
 
@@ -444,7 +488,10 @@ module.exports = NodeHelper.create({
         taken_at: currentItem.taken_at,
         date_str: currentItem.date_str,
         time_str: currentItem.time_str,
+        period: currentItem.period,
         ym: currentItem.ym,
+        periodIndex: currentItem.periodIndex,
+        periodTotal: currentItem.periodTotal,
         monthIndex: currentItem.monthIndex,
         monthTotal: currentItem.monthTotal,
         timelineIndex: currentItem.timelineIndex,
