@@ -20,9 +20,9 @@ Module.register('MMM-TimelineSlideshow', {
 
     // 2. Timeline grouping & selection
     groupBy: 'day',           // 'day': 일별 그룹화, 'month': 월별 그룹화
-    photosPerPeriod: 10,      // 그룹별 추출할 사진 수 (기본값: 10)
-    photosPerDay: 10,         // 일별 사진 수 (기본값: 10)
-    photosPerMonth: 10,       // 월별 사진 수 (기본값: 10)
+    photosPerPeriod: 30,      // 그룹별 추출할 사진 수 (기본값: 30)
+    photosPerDay: 30,         // 일별 사진 수 (기본값: 30)
+    photosPerMonth: 30,       // 월별 사진 수 (기본값: 30)
     minPhotosPerPeriod: 10,   // 최소 사진 수 (10장 미만인 일/월 제외)
     minPhotosPerDay: 10,      // 일간 사진 수 10장 미만인 날 제외
     minPhotosPerMonth: 11,    // 월간 사진 수가 10장 이하인 월 제외
@@ -32,7 +32,7 @@ Module.register('MMM-TimelineSlideshow', {
     resumeTimeline: true,     // 재실행 시 이전 마지막 기간의 다음부터 이어서 재생
     minYear: null,            // 특정 연도 이후만 표시할 경우 (예: 2015)
     maxYear: null,            // 특정 연도 이전만 표시할 경우 (예: 2025)
-    resortOnLoop: true,       // 전체 타임라인 1주기 완료 시 새로운 랜덤 10장씩 다시 추출
+    resortOnLoop: true,       // 전체 타임라인 1주기 완료 시 새로운 랜덤 30장씩 다시 추출
 
     // 3. Slideshow speed
     slideshowSpeed: 10 * 1000, // 10 seconds
@@ -806,12 +806,11 @@ Module.register('MMM-TimelineSlideshow', {
     const { container, meta, listContainer, footer } = this.startupWorldMapElements;
     const duration = (this.config.startupWorldMapDuration || 30000);
 
-    const totalCountries = travelSummary.countries?.length || 0;
     const totalJourneys = travelSummary.travelYms?.length || 0;
     const startYm = travelSummary.firstPeriod || '2010.04';
     const endYm = travelSummary.lastPeriod || '2026.04';
     if (meta) {
-      meta.textContent = `${startYm} ~ ${endYm} · 총 ${totalCountries}개국 ${totalJourneys}개 여행 기록`;
+      meta.textContent = `${startYm} ~ ${endYm} · 총 ${totalJourneys}개 여행의 발자취`;
     }
 
     if (listContainer) {
@@ -943,20 +942,24 @@ Module.register('MMM-TimelineSlideshow', {
   getTileLayerInfo(theme, apiKey) {
     const key = apiKey || this.config.portraitMapApiKey || 'cb1_2sbq_1_5ce7e2903fefa17bc3ed219d';
     const keyParam = key ? `?key=${key}` : '';
-    let tileUrl = `https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png${keyParam}`;
+    let tileUrl = `https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png${keyParam}`;
     let subdomains = 'abcd';
 
-    const t = (theme || 'light').toLowerCase();
+    const t = (theme || 'light_nolabels').toLowerCase();
     if (t === 'dark') {
       tileUrl = `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png${keyParam}`;
+    } else if (t === 'dark_nolabels') {
+      tileUrl = `https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png${keyParam}`;
     } else if (t === 'voyager') {
       tileUrl = `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png${keyParam}`;
     } else if (t === 'osm') {
       tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
       subdomains = 'abc';
-    } else {
-      // 'light', 'white', 'positron'
+    } else if (t === 'light_all') {
       tileUrl = `https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png${keyParam}`;
+    } else {
+      // 'light', 'white', 'positron', 'light_nolabels' (no country labels)
+      tileUrl = `https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png${keyParam}`;
     }
 
     return { tileUrl, subdomains, maxZoom: 19 };
