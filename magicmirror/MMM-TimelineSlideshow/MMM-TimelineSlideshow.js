@@ -19,13 +19,15 @@ Module.register('MMM-TimelineSlideshow', {
     },
 
     // 2. Timeline grouping & selection
-    photosPerMonth: 5,        // 월별 랜덤 추출할 사진 수 (기본값: 5)
+    photosPerMonth: 10,       // 월별 랜덤 추출할 사진 수 (기본값: 10)
     minPhotosPerMonth: 11,    // 월간 사진 수가 10장 이하인 월 제외 (여행 사진이 아닌 월 제외)
     sortOrder: 'asc',         // 'asc': 과거 -> 현재(시간순), 'desc': 현재 -> 과거
     sortWithinMonth: 'asc',   // 'asc': 해당 월 내 시간순, 'random': 해당 월 내 무작위
+    avoidRecentPhotos: true,  // 실행마다 중복 없이 새로운 미표시 사진 우선 선택
+    resumeTimeline: true,     // 재실행 시 이전 마지막 월의 다음 월부터 이어서 재생 (항상 첫 월부터 반복 방지)
     minYear: null,            // 특정 연도 이후만 표시할 경우 (예: 2015)
     maxYear: null,            // 특정 연도 이전만 표시할 경우 (예: 2025)
-    resortOnLoop: true,       // 전체 타임라인 1주기 완료 시 새로운 랜덤 5장씩 다시 추출
+    resortOnLoop: true,       // 전체 타임라인 1주기 완료 시 새로운 랜덤 10장씩 다시 추출
 
     // 3. Slideshow speed
     slideshowSpeed: 10 * 1000, // 10 seconds

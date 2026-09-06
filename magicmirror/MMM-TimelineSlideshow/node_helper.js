@@ -73,6 +73,7 @@ module.exports = NodeHelper.create({
     this.timer = null;
     this.locationCache = new Map();
     this.endpointRegistered = false;
+    this.lastRecordedYm = null;
   },
 
   setupImageEndpoint() {
@@ -114,6 +115,36 @@ module.exports = NodeHelper.create({
     }
   },
 
+  getStateFilePath() {
+    return path.join(__dirname, 'data', 'timeline_state.json');
+  },
+
+  loadState() {
+    try {
+      const filePath = this.getStateFilePath();
+      if (fs.existsSync(filePath)) {
+        const raw = fs.readFileSync(filePath, 'utf8');
+        const parsed = JSON.parse(raw);
+        return {
+          lastYm: parsed.lastYm || '',
+          shownPhotoIds: parsed.shownPhotoIds || {}
+        };
+      }
+    } catch (err) {
+      Log.warn('[MMM-TimelineSlideshow] Failed to load timeline_state.json:', err.message);
+    }
+    return { lastYm: '', shownPhotoIds: {} };
+  },
+
+  saveState(state) {
+    try {
+      const filePath = this.getStateFilePath();
+      fs.writeFileSync(filePath, JSON.stringify(state, null, 2), 'utf8');
+    } catch (err) {
+      Log.warn('[MMM-TimelineSlideshow] Failed to save timeline_state.json:', err.message);
+    }
+  },
+
   shuffleArray(array) {
     const arr = [...array];
     for (let i = arr.length - 1; i > 0; i--) {
@@ -131,13 +162,14 @@ module.exports = NodeHelper.create({
     }
 
     const config = this.config || {};
-    const photosPerMonth = parseInt(config.photosPerMonth || 5, 10);
+    const photosPerMonth = parseInt(config.photosPerMonth || 10, 10);
     const sortOrder = (config.sortOrder || 'asc').toLowerCase() === 'desc' ? 'DESC' : 'ASC';
     const sortWithinMonth = (config.sortWithinMonth || 'asc').toLowerCase();
     const minPhotosPerMonth = parseInt(config.minPhotosPerMonth || config.minMonthlyPhotos || 11, 10);
+    const avoidRecentPhotos = config.avoidRecentPhotos !== false;
 
-    // Query extra photos per month to guarantee enough valid files
-    const candidateLimit = Math.max(photosPerMonth + 5, 12);
+    // Query extra photos per month to guarantee enough fresh candidates
+    const candidateLimit = Math.max(photosPerMonth * 8, 80);
 
     let yearFilterSql = '';
     let excludeFilterSql = '';
@@ -201,35 +233,67 @@ module.exports = NodeHelper.create({
       const [rows] = await this.pool.query(sql, queryParams);
       Log.info(`[MMM-TimelineSlideshow] DB returned ${rows.length} candidate rows in ${Date.now() - startTime}ms.`);
 
+      const state = this.loadState();
+      if (!state.shownPhotoIds) state.shownPhotoIds = {};
+
       // Group by ym and filter files existing on disk and not in excluded albums
-      const monthMap = new Map();
+      const monthCandidates = new Map();
       for (const r of rows) {
-        if (!monthMap.has(r.ym)) {
-          monthMap.set(r.ym, []);
+        if (!monthCandidates.has(r.ym)) {
+          monthCandidates.set(r.ym, []);
         }
-        const list = monthMap.get(r.ym);
-        if (list.length < photosPerMonth) {
-          try {
-            if (!fs.existsSync(r.filepath)) continue;
-          } catch {
+        try {
+          if (!fs.existsSync(r.filepath)) continue;
+        } catch {
+          continue;
+        }
+
+        const isExcluded = excludeAlbums.some(kw =>
+          (r.album && r.album.toLowerCase().includes(kw.toLowerCase())) ||
+          (r.filepath && r.filepath.toLowerCase().includes(kw.toLowerCase()))
+        );
+        if (isExcluded) continue;
+
+        if (excludeKorea && r.has_gps && r.latitude && r.longitude) {
+          if (r.latitude >= 33.1 && r.latitude <= 38.6 && r.longitude >= 126.0 && r.longitude <= 129.6) {
             continue;
           }
-
-          const isExcluded = excludeAlbums.some(kw =>
-            (r.album && r.album.toLowerCase().includes(kw.toLowerCase())) ||
-            (r.filepath && r.filepath.toLowerCase().includes(kw.toLowerCase()))
-          );
-          if (isExcluded) continue;
-
-          if (excludeKorea && r.has_gps && r.latitude && r.longitude) {
-            if (r.latitude >= 33.1 && r.latitude <= 38.6 && r.longitude >= 126.0 && r.longitude <= 129.6) {
-              continue;
-            }
-          }
-
-          list.push(r);
         }
+
+        monthCandidates.get(r.ym).push(r);
       }
+
+      // Pick photos avoiding recently shown ones
+      const monthMap = new Map();
+      for (const [ym, candidates] of monthCandidates.entries()) {
+        if (!candidates || candidates.length === 0) continue;
+
+        let selected = [];
+        if (avoidRecentPhotos) {
+          const seenIds = new Set(state.shownPhotoIds[ym] || []);
+          const unseen = candidates.filter(c => !seenIds.has(c.id));
+          if (unseen.length >= photosPerMonth) {
+            selected = unseen.slice(0, photosPerMonth);
+            selected.forEach(p => seenIds.add(p.id));
+            state.shownPhotoIds[ym] = Array.from(seenIds);
+          } else {
+            // Use all remaining unseen photos first
+            selected = [...unseen];
+            const needed = photosPerMonth - selected.length;
+            const seen = candidates.filter(c => seenIds.has(c.id));
+            const additional = this.shuffleArray(seen).slice(0, needed);
+            selected = selected.concat(additional);
+            // Reset seen IDs for this month with the newly chosen batch
+            state.shownPhotoIds[ym] = selected.map(p => p.id);
+          }
+        } else {
+          selected = candidates.slice(0, photosPerMonth);
+        }
+
+        monthMap.set(ym, selected);
+      }
+
+      this.saveState(state);
 
       // Sort or shuffle within each month if configured
       const sortedPlaylist = [];
@@ -297,11 +361,29 @@ module.exports = NodeHelper.create({
       return;
     }
 
+    const resumeTimeline = this.config?.resumeTimeline !== false;
+    if (resumeTimeline) {
+      const state = this.loadState();
+      if (state.lastYm && this.timelineList.length > 0) {
+        // Find the first photo of the next month after state.lastYm
+        const nextMonthIdx = this.timelineList.findIndex(item => item.ym > state.lastYm);
+        if (nextMonthIdx !== -1) {
+          this.timelineIndex = nextMonthIdx;
+          Log.info(`[MMM-TimelineSlideshow] Resuming timeline from ${this.timelineList[nextMonthIdx].ym} (index ${nextMonthIdx + 1}/${this.timelineList.length}) based on last played month ${state.lastYm}.`);
+        } else {
+          // Wrapped around: lastYm was the last month or beyond, start from beginning
+          this.timelineIndex = 0;
+          Log.info(`[MMM-TimelineSlideshow] Last played month was ${state.lastYm}. Reached end of timeline, starting from beginning ${this.timelineList[0].ym}.`);
+        }
+      }
+    }
+
     this.sendSocketNotification('TIMELINESLIDESHOW_INITIALIZED', {
       identifier: this.config?.identifier,
       totalPhotos: this.timelineList.length,
       firstYm: this.timelineList[0]?.ym,
-      lastYm: this.timelineList[this.timelineList.length - 1]?.ym
+      lastYm: this.timelineList[this.timelineList.length - 1]?.ym,
+      startIndex: this.timelineIndex
     });
   },
 
@@ -318,6 +400,9 @@ module.exports = NodeHelper.create({
       this.timelineIndex = 0;
       if (this.config?.resortOnLoop !== false) {
         Log.info('[MMM-TimelineSlideshow] Finished one complete timeline cycle! Fetching a new random batch for the next cycle...');
+        const state = this.loadState();
+        state.lastYm = '';
+        this.saveState(state);
         this.initializeTimeline().then(() => {
           this.getNextImage();
         });
@@ -327,6 +412,13 @@ module.exports = NodeHelper.create({
 
     const currentItem = this.timelineList[this.timelineIndex++];
     Log.info(`[MMM-TimelineSlideshow] [${currentItem.timelineIndex}/${currentItem.timelineTotal}] [${currentItem.ym} ${currentItem.monthIndex}/${currentItem.monthTotal}] ${currentItem.filename}`);
+
+    if (this.lastRecordedYm !== currentItem.ym) {
+      this.lastRecordedYm = currentItem.ym;
+      const state = this.loadState();
+      state.lastYm = currentItem.ym;
+      this.saveState(state);
+    }
 
     const self = this;
     this.readImageFile(currentItem.filepath, (imageData) => {
