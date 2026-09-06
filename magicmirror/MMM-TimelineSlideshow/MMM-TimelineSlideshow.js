@@ -20,6 +20,7 @@ Module.register('MMM-TimelineSlideshow', {
 
     // 2. Timeline grouping & selection
     photosPerMonth: 5,        // 월별 랜덤 추출할 사진 수 (기본값: 5)
+    minPhotosPerMonth: 11,    // 월간 사진 수가 10장 이하인 월 제외 (여행 사진이 아닌 월 제외)
     sortOrder: 'asc',         // 'asc': 과거 -> 현재(시간순), 'desc': 현재 -> 과거
     sortWithinMonth: 'asc',   // 'asc': 해당 월 내 시간순, 'random': 해당 월 내 무작위
     minYear: null,            // 특정 연도 이후만 표시할 경우 (예: 2015)

@@ -134,9 +134,10 @@ module.exports = NodeHelper.create({
     const photosPerMonth = parseInt(config.photosPerMonth || 5, 10);
     const sortOrder = (config.sortOrder || 'asc').toLowerCase() === 'desc' ? 'DESC' : 'ASC';
     const sortWithinMonth = (config.sortWithinMonth || 'asc').toLowerCase();
+    const minPhotosPerMonth = parseInt(config.minPhotosPerMonth || config.minMonthlyPhotos || 11, 10);
 
-    // Query extra photos per month (photosPerMonth + 3) to guarantee enough valid files
-    const candidateLimit = photosPerMonth + 3;
+    // Query extra photos per month to guarantee enough valid files
+    const candidateLimit = Math.max(photosPerMonth + 5, 12);
 
     let yearFilterSql = '';
     let excludeFilterSql = '';
@@ -173,27 +174,29 @@ module.exports = NodeHelper.create({
       excludeFilterSql = ' AND ' + conditions.join(' AND ');
     }
 
+    queryParams.push(minPhotosPerMonth);
     queryParams.push(candidateLimit);
 
     const sql = `
       SELECT ym, id, album, filename, filepath, file_size, taken_at, date_str, time_str,
              camera_make, camera_model, lens_model, focal_length, f_number, exposure_time, iso,
-             width, height, orientation, is_portrait, has_gps, latitude, longitude, altitude
+             width, height, orientation, is_portrait, has_gps, latitude, longitude, altitude, ym_cnt
       FROM (
         SELECT DATE_FORMAT(taken_at, '%Y-%m') as ym,
                id, album, filename, filepath, file_size, taken_at, date_str, time_str,
                camera_make, camera_model, lens_model, focal_length, f_number, exposure_time, iso,
                width, height, orientation, is_portrait, has_gps, latitude, longitude, altitude,
+               COUNT(*) OVER (PARTITION BY DATE_FORMAT(taken_at, '%Y-%m')) as ym_cnt,
                ROW_NUMBER() OVER (PARTITION BY DATE_FORMAT(taken_at, '%Y-%m') ORDER BY RAND()) as rn
         FROM photos
         WHERE taken_at IS NOT NULL ${yearFilterSql} ${excludeFilterSql} ${koreaFilterSql}
       ) sub
-      WHERE rn <= ?
+      WHERE ym_cnt >= ? AND rn <= ?
       ORDER BY ym ${sortOrder}, taken_at ASC
     `;
 
     try {
-      Log.info(`[MMM-TimelineSlideshow] Querying timeline photos (perMonth: ${photosPerMonth}, order: ${sortOrder}, excludeKorea: ${excludeKorea})...`);
+      Log.info(`[MMM-TimelineSlideshow] Querying timeline photos (perMonth: ${photosPerMonth}, minMonthlyPhotos: ${minPhotosPerMonth}, order: ${sortOrder}, excludeKorea: ${excludeKorea})...`);
       const startTime = Date.now();
       const [rows] = await this.pool.query(sql, queryParams);
       Log.info(`[MMM-TimelineSlideshow] DB returned ${rows.length} candidate rows in ${Date.now() - startTime}ms.`);
