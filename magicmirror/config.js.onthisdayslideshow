@@ -1,6 +1,6 @@
-/* MagicMirror² Configuration - Smart Slideshow (On-This-Day + Local Folder Gallery)
+/* MagicMirror² Configuration - On This Day Slideshow (On-This-Day + Local Folder Gallery)
  *
- * Starts with On-This-Day photos (+/- 1 week) from MariaDB 'photo' database,
+ * Starts with On-This-Day photos from MariaDB 'photo' database,
  * and seamlessly switches to local album folder (@IMG_DIR@) when finished or none found.
  */
 

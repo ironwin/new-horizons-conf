@@ -115,6 +115,11 @@
   box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
 }
 
+.MMM-OnThisDaySlideshow .info-badge.folder-mode {
+  background: linear-gradient(135deg, rgba(0, 210, 211, 0.9), rgba(84, 160, 255, 0.9));
+  box-shadow: 0 2px 8px rgba(0, 210, 211, 0.4);
+}
+
 .MMM-OnThisDaySlideshow .info-date {
   font-size: 17px;
   font-weight: 600;
@@ -339,6 +344,11 @@
   color: #ffffff;
   letter-spacing: 0.5px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.MMM-OnThisDaySlideshow .portrait-info-badge.folder-mode {
+  background: linear-gradient(135deg, rgba(0, 210, 211, 0.9), rgba(84, 160, 255, 0.9));
+  box-shadow: 0 4px 16px rgba(0, 210, 211, 0.45);
 }
 
 .MMM-OnThisDaySlideshow .portrait-info-date-wrapper {

@@ -4,7 +4,7 @@ cd /home/pi/new-horizons-conf
 
 FILTER="jwst"  # 필터링할 문자열(여러개라면 정규식 사용 가능)
 IMAGE_PATH="/media/pi/SSD-256-USB/PHOTOS"
-CONFIG_BASE="./magicmirror/config.js.timelineslideshow"
+CONFIG_BASE="./magicmirror/config.js.onthisdayslideshow"
 CONFIG_LAST="/home/pi/MagicMirror/config/config.js"
 
 

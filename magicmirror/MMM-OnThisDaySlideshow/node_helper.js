@@ -14,6 +14,7 @@ const NodeHelper = require('node_helper');
 const Log = require('../../js/logger.js');
 const mysql = require('mysql2/promise');
 const sharp = require('sharp');
+const EXIF = require('exif-js');
 
 const COUNTRY_BOUNDS_MAP = {
   ae: [[22.6, 51.5], [26.1, 56.4]],
@@ -66,14 +67,23 @@ const COUNTRY_BOUNDS_MAP = {
 module.exports = NodeHelper.create({
   start() {
     this.pool = null;
-    this.imageList = [];
-    this.index = 0;
+    this.mode = 'onThisDay'; // 'onThisDay' or 'folder'
+    this.onThisDayList = [];
+    this.onThisDayIndex = 0;
+    this.onThisDayCompleted = false;
+
+    this.folderList = [];
+    this.folderIndex = 0;
+
     this.timer = null;
     this.dateCheckTimer = null;
     this.currentDateKey = null;
+
     this.locationCache = new Map();
     this.folderLocationCache = new Map();
     this.endpointRegistered = false;
+    this.excludePaths = new Set();
+    this.validImageFileExtensions = new Set();
   },
 
   // Setup express endpoint to serve image files directly if needed
@@ -220,9 +230,17 @@ module.exports = NodeHelper.create({
           return {
             ...r,
             isExactToday: isExact,
+            playlistType: 'onThisDay',
             isFallback: false
           };
         });
+      }
+
+      // 오늘 사진이 없을 때: 로컬 폴더(imagePaths)가 설정되어 있으면 즉시 폴더 모드로 전환하도록 빈 배열 반환
+      const hasImagePaths = Array.isArray(this.config?.imagePaths) && this.config.imagePaths.length > 0;
+      if (hasImagePaths) {
+        Log.info(`[MMM-OnThisDaySlideshow] No photos found for ${target.dateStr}. Delegating to local folder gallery mode.`);
+        return [];
       }
 
       const fallbackMode = this.config?.fallbackMode || 'random';
@@ -242,7 +260,7 @@ module.exports = NodeHelper.create({
         const [recentRows] = await this.pool.query(sqlRecent, [this.config?.fallbackMaxCount || 50]);
         const validRecent = recentRows.filter(r => fs.existsSync(r.filepath));
         Log.info(`[MMM-OnThisDaySlideshow] Fallback recent found ${validRecent.length} photos`);
-        return validRecent.map(r => ({ ...r, isExactToday: false, isFallback: true, fallbackReason: 'recent' }));
+        return validRecent.map(r => ({ ...r, isExactToday: false, isFallback: true, fallbackReason: 'recent', playlistType: 'onThisDay' }));
       }
 
       const sqlRandom = `
@@ -254,7 +272,7 @@ module.exports = NodeHelper.create({
       const [randomRows] = await this.pool.query(sqlRandom, [this.config?.fallbackMaxCount || 50]);
       const validRandom = randomRows.filter(r => fs.existsSync(r.filepath));
       Log.info(`[MMM-OnThisDaySlideshow] Fallback random found ${validRandom.length} photos`);
-      return validRandom.map(r => ({ ...r, isExactToday: false, isFallback: true, fallbackReason: 'random' }));
+      return validRandom.map(r => ({ ...r, isExactToday: false, isFallback: true, fallbackReason: 'random', playlistType: 'onThisDay' }));
 
     } catch (err) {
       Log.error('[MMM-OnThisDaySlideshow] Database query error:', err);
@@ -262,26 +280,140 @@ module.exports = NodeHelper.create({
     }
   },
 
-  // Gather and prepare image list
-  async gatherImageList(sendNotification = false) {
-    const rawList = await this.queryPhotos();
-    // Sort in ascending date order (earliest/oldest photos first)
-    this.imageList = rawList.sort((a, b) => new Date(a.taken_at) - new Date(b.taken_at));
-    this.index = 0;
+  // 2. Gather Local Folder Photos (from config.imagePaths)
+  checkValidImageFileExtension(filename) {
+    if (!filename.includes('.')) return false;
+    const ext = filename.split('.').pop().toLowerCase();
+    return this.validImageFileExtensions.has(ext);
+  },
+
+  excludedFiles(currentDir) {
+    try {
+      const excludedFile = fs.readFileSync(`${currentDir}/excludeImages.txt`, 'utf8');
+      return excludedFile.split(/\r?\n/u);
+    } catch {
+      return [];
+    }
+  },
+
+  isExcluded(filename, excludedImagesList) {
+    return excludedImagesList.includes(filename.replace(/\.[a-zA-Z]{3,4}$/u, ''));
+  },
+
+  getFolderFilesRecursive(imagePath, list, excludedImagesList, config) {
+    if (!fs.existsSync(imagePath)) return;
+    try {
+      const contents = fs.readdirSync(imagePath);
+      for (let i = 0; i < contents.length; i++) {
+        if (this.excludePaths.has(contents[i])) continue;
+        const currentItem = path.join(imagePath, contents[i]);
+        const stats = fs.lstatSync(currentItem);
+        if (stats.isDirectory() && config.recursiveSubDirectories) {
+          this.getFolderFilesRecursive(currentItem, list, this.excludedFiles(currentItem), config);
+        } else if (stats.isFile()) {
+          const isValid = this.checkValidImageFileExtension(currentItem);
+          const isEx = this.isExcluded(contents[i], excludedImagesList);
+          if (isValid && !isEx) {
+            list.push({
+              filepath: currentItem,
+              filename: contents[i],
+              album: path.basename(path.dirname(currentItem)),
+              created: stats.ctimeMs,
+              modified: stats.mtimeMs,
+              playlistType: 'folder'
+            });
+          }
+        }
+      }
+    } catch (err) {
+      Log.error(`[MMM-OnThisDaySlideshow] Error reading folder "${imagePath}":`, err);
+    }
+  },
+
+  gatherFolderPhotos() {
+    const config = this.config;
+    if (!config || !Array.isArray(config.imagePaths) || config.imagePaths.length === 0) {
+      Log.info('[MMM-OnThisDaySlideshow] No imagePaths specified for folder gallery.');
+      return [];
+    }
+
+    this.excludePaths = new Set(config.excludePaths || ['@eaDir']);
+    const extList = (config.validImageFileExtensions || 'bmp,jpg,jpeg,gif,png').toLowerCase().split(',');
+    this.validImageFileExtensions = new Set(extList);
+
+    const list = [];
+    for (const p of config.imagePaths) {
+      this.getFolderFilesRecursive(p, list, this.excludedFiles(p), config);
+    }
+
+    Log.info(`[MMM-OnThisDaySlideshow] Found ${list.length} photos in local folder(s).`);
+    return list;
+  },
+
+  // Lookup photo metadata from MariaDB if local file is already indexed
+  async enrichFolderPhotoWithDb(photo) {
+    if (!this.pool || !photo.filepath) return photo;
+    try {
+      const sql = `
+        SELECT id, album, filename, filepath, file_size, taken_at, date_str, time_str,
+               camera_make, camera_model, lens_model, focal_length, f_number, exposure_time, iso,
+               width, height, orientation, is_portrait, has_gps, latitude, longitude, altitude
+        FROM photos
+        WHERE filepath = ?
+        LIMIT 1
+      `;
+      const [rows] = await this.pool.query(sql, [photo.filepath]);
+      if (rows && rows.length > 0) {
+        return {
+          ...rows[0],
+          playlistType: 'folder',
+          isExactToday: false
+        };
+      }
+    } catch (err) {
+      Log.debug('[MMM-OnThisDaySlideshow] enrichFolderPhotoWithDb error:', err);
+    }
+    return photo;
+  },
+
+  // Initialize both playlists and set initial mode
+  async initializePlaylists(sendNotification = false) {
+    const rawOnThisDay = await this.queryPhotos();
+    // Sort On-This-Day photos in ascending date order (earliest/oldest photos first)
+    this.onThisDayList = rawOnThisDay.sort((a, b) => new Date(a.taken_at) - new Date(b.taken_at));
+    this.onThisDayIndex = 0;
+    this.onThisDayCompleted = false;
+
+    const rawFolder = this.gatherFolderPhotos();
+    this.folderList = this.config?.randomizeImageOrder ? this.shuffleArray(rawFolder) : rawFolder;
+    this.folderIndex = 0;
+
     this.currentDateKey = this.getTargetDate().dateStr;
 
-    Log.info(`[MMM-OnThisDaySlideshow] Loaded ${this.imageList.length} photos into slideshow playlist.`);
+    // Initial mode selection:
+    // If OnThisDay has photos, start with OnThisDay! Otherwise start directly with Folder gallery.
+    if (this.onThisDayList.length > 0) {
+      this.mode = 'onThisDay';
+      Log.info(`[MMM-OnThisDaySlideshow] Starting in On-This-Day mode (${this.onThisDayList.length} photos).`);
+    } else {
+      this.mode = 'folder';
+      Log.info(`[MMM-OnThisDaySlideshow] No On-This-Day photos found for today. Starting directly in Folder mode (${this.folderList.length} photos).`);
+    }
 
-    this.sendSocketNotification('ONTHISDAY_FILELIST', {
-      total: this.imageList.length,
-      dateStr: this.currentDateKey,
-      isFallback: this.imageList.length > 0 ? this.imageList[0].isFallback : false
+    this.sendSocketNotification('ONTHISDAY_STATUS', {
+      mode: this.mode,
+      onThisDayCount: this.onThisDayList.length,
+      folderCount: this.folderList.length,
+      dateStr: this.currentDateKey
     });
 
     if (sendNotification) {
       this.sendSocketNotification('ONTHISDAY_READY', {
-        identifier: this.config.identifier,
-        count: this.imageList.length
+        identifier: this.config?.identifier,
+        mode: this.mode,
+        count: this.onThisDayList.length + this.folderList.length,
+        onThisDayCount: this.onThisDayList.length,
+        folderCount: this.folderList.length
       });
     }
   },
@@ -333,78 +465,119 @@ module.exports = NodeHelper.create({
       });
   },
 
-  // Display next image
-  getNextImage() {
-    if (!this.imageList || this.imageList.length === 0) {
-      Log.info('[MMM-OnThisDaySlideshow] No images to display. Checking again in 5 minutes.');
+  // Display next image according to smart transition rules
+  async getNextImage() {
+    let currentItem = null;
+
+    if (this.mode === 'onThisDay') {
+      if (this.onThisDayIndex < this.onThisDayList.length) {
+        currentItem = this.onThisDayList[this.onThisDayIndex++];
+        Log.info(`[MMM-OnThisDaySlideshow] [OnThisDay ${this.onThisDayIndex}/${this.onThisDayList.length}] ${currentItem.filename} (taken: ${currentItem.taken_at})`);
+      } else {
+        // Finished all On-This-Day photos! Seamlessly switch to Folder mode!
+        Log.info('[MMM-OnThisDaySlideshow] Completed all On-This-Day photos. Switching to Folder Gallery mode!');
+        this.onThisDayCompleted = true;
+        this.mode = 'folder';
+        this.folderIndex = 0;
+        this.sendSocketNotification('ONTHISDAY_MODE_CHANGED', {
+          mode: 'folder',
+          reason: 'finished_onthisday'
+        });
+
+        if (this.folderList.length > 0) {
+          currentItem = this.folderList[this.folderIndex++];
+          Log.info(`[MMM-OnThisDaySlideshow] [Folder ${this.folderIndex}/${this.folderList.length}] ${currentItem.filename}`);
+        } else if (this.onThisDayList.length > 0) {
+          // If folder list is empty, restart OnThisDay list
+          this.mode = 'onThisDay';
+          this.onThisDayIndex = 0;
+          currentItem = this.onThisDayList[this.onThisDayIndex++];
+        }
+      }
+    } else {
+      // Folder mode
+      if (this.folderList.length > 0) {
+        if (this.folderIndex >= this.folderList.length) {
+          this.folderIndex = 0;
+          if (this.config?.randomizeImageOrder) {
+            this.folderList = this.shuffleArray(this.folderList);
+          }
+        }
+        currentItem = this.folderList[this.folderIndex++];
+        Log.info(`[MMM-OnThisDaySlideshow] [Folder ${this.folderIndex}/${this.folderList.length}] ${currentItem.filename}`);
+      } else if (this.onThisDayList.length > 0) {
+        // Fallback to onThisDay if folder empty
+        this.mode = 'onThisDay';
+        this.onThisDayIndex = 0;
+        currentItem = this.onThisDayList[this.onThisDayIndex++];
+      }
+    }
+
+    if (!currentItem) {
+      Log.warn('[MMM-OnThisDaySlideshow] No photos available in either mode. Checking again in 5 minutes.');
       this.sendSocketNotification('ONTHISDAY_EMPTY', {
         identifier: this.config?.identifier,
         dateStr: this.currentDateKey
       });
       setTimeout(() => {
-        this.gatherImageList(true).then(() => {
-          if (this.imageList.length > 0) this.getNextImage();
+        this.initializePlaylists(true).then(() => {
+          this.getNextImage();
         });
       }, 5 * 60 * 1000);
       return;
     }
 
-    if (this.index >= this.imageList.length) {
-      this.index = 0;
-      if (this.config.randomizeImageOrder) {
-        this.imageList = this.shuffleArray(this.imageList);
-      }
+    // If item is from folder, try to enrich with DB metadata if indexed
+    if (currentItem.playlistType === 'folder' && !currentItem.taken_at) {
+      currentItem = await this.enrichFolderPhotoWithDb(currentItem);
     }
 
-    const photo = this.imageList[this.index++];
-    Log.info(`[MMM-OnThisDaySlideshow] Displaying image [${this.index}/${this.imageList.length}]: ${photo.filename} (taken: ${photo.taken_at})`);
-
     const self = this;
-    this.readImageFile(photo.filepath, (imageData) => {
+    this.readImageFile(currentItem.filepath, (imageData) => {
       if (!imageData) {
-        // Skip corrupted/unreadable file
-        Log.warn(`[MMM-OnThisDaySlideshow] Skipping unreadable image: ${photo.filepath}`);
+        Log.warn(`[MMM-OnThisDaySlideshow] Skipping unreadable image: ${currentItem.filepath}`);
         return self.getNextImage();
       }
 
-      // Calculate "years ago"
       let yearsAgo = null;
-      if (photo.taken_at) {
-        const takenYear = new Date(photo.taken_at).getFullYear();
+      if (currentItem.taken_at) {
+        const takenYear = new Date(currentItem.taken_at).getFullYear();
         const currentYear = new Date().getFullYear();
         yearsAgo = currentYear - takenYear;
       }
 
       const returnPayload = {
         identifier: self.config.identifier,
-        id: photo.id,
-        path: photo.filepath,
+        id: currentItem.id || null,
+        path: currentItem.filepath,
         data: imageData,
-        album: photo.album,
-        filename: photo.filename,
-        taken_at: photo.taken_at,
-        date_str: photo.date_str,
-        time_str: photo.time_str,
-        width: photo.width,
-        height: photo.height,
-        orientation: photo.orientation,
-        is_portrait: photo.is_portrait === 1,
-        has_gps: photo.has_gps === 1,
-        latitude: photo.latitude ? Number(photo.latitude) : null,
-        longitude: photo.longitude ? Number(photo.longitude) : null,
-        camera_make: photo.camera_make,
-        camera_model: photo.camera_model,
-        lens_model: photo.lens_model,
-        focal_length: photo.focal_length,
-        f_number: photo.f_number,
-        exposure_time: photo.exposure_time,
-        iso: photo.iso,
+        album: currentItem.album || path.basename(path.dirname(currentItem.filepath)),
+        filename: currentItem.filename || path.basename(currentItem.filepath),
+        taken_at: currentItem.taken_at || null,
+        date_str: currentItem.date_str || null,
+        time_str: currentItem.time_str || null,
+        width: currentItem.width || null,
+        height: currentItem.height || null,
+        orientation: currentItem.orientation || null,
+        is_portrait: currentItem.is_portrait === 1,
+        has_gps: currentItem.has_gps === 1,
+        latitude: currentItem.latitude ? Number(currentItem.latitude) : null,
+        longitude: currentItem.longitude ? Number(currentItem.longitude) : null,
+        camera_make: currentItem.camera_make || null,
+        camera_model: currentItem.camera_model || null,
+        lens_model: currentItem.lens_model || null,
+        focal_length: currentItem.focal_length || null,
+        f_number: currentItem.f_number || null,
+        exposure_time: currentItem.exposure_time || null,
+        iso: currentItem.iso || null,
         yearsAgo: yearsAgo,
-        isExactToday: photo.isExactToday !== undefined ? photo.isExactToday : false,
-        isFallback: photo.isFallback || false,
-        fallbackReason: photo.fallbackReason || null,
-        index: self.index,
-        total: self.imageList.length
+        isExactToday: currentItem.isExactToday !== undefined ? currentItem.isExactToday : false,
+        isFallback: currentItem.isFallback || false,
+        fallbackReason: currentItem.fallbackReason || null,
+        playlistType: currentItem.playlistType || (self.mode === 'folder' ? 'folder' : 'onThisDay'),
+        mode: self.mode,
+        index: self.mode === 'folder' ? self.folderIndex : self.onThisDayIndex,
+        total: self.mode === 'folder' ? self.folderList.length : self.onThisDayList.length
       };
 
       self.sendSocketNotification('ONTHISDAY_DISPLAY_IMAGE', returnPayload);
@@ -414,9 +587,12 @@ module.exports = NodeHelper.create({
   },
 
   getPrevImage() {
-    this.index -= 2;
-    if (this.index < 0) {
-      this.index = Math.max(0, this.imageList.length - 1);
+    if (this.mode === 'onThisDay') {
+      this.onThisDayIndex -= 2;
+      if (this.onThisDayIndex < 0) this.onThisDayIndex = 0;
+    } else {
+      this.folderIndex -= 2;
+      if (this.folderIndex < 0) this.folderIndex = 0;
     }
     this.getNextImage();
   },
@@ -436,17 +612,17 @@ module.exports = NodeHelper.create({
     }, speed);
   },
 
-  // Setup periodic check to refresh photos when calendar day changes (e.g. at midnight)
+  // Setup periodic check to refresh photos when calendar day changes (at midnight)
   startDateCheckLoop() {
     if (this.dateCheckTimer) clearInterval(this.dateCheckTimer);
-    // Check every 10 minutes
-    this.dateCheckTimer = setInterval(() => {
+
+    this.dateCheckTimer = setInterval(async () => {
       const target = this.getTargetDate();
       if (this.currentDateKey && target.dateStr !== this.currentDateKey) {
-        Log.info(`[MMM-OnThisDaySlideshow] Date has changed from ${this.currentDateKey} to ${target.dateStr}. Refreshing photos!`);
-        this.gatherImageList(true).then(() => {
-          this.getNextImage();
-        });
+        Log.info(`[MMM-OnThisDaySlideshow] Date has changed from ${this.currentDateKey} to ${target.dateStr}. Refreshing playlists...`);
+        this.stopTimer();
+        await this.initializePlaylists(true);
+        this.getNextImage();
       }
     }, 10 * 60 * 1000);
   },
@@ -612,7 +788,7 @@ module.exports = NodeHelper.create({
       this.startDateCheckLoop();
 
       setTimeout(async () => {
-        await this.gatherImageList(true);
+        await this.initializePlaylists(true);
         this.getNextImage();
       }, 300);
 
@@ -663,7 +839,7 @@ module.exports = NodeHelper.create({
     } else if (notification === 'ONTHISDAY_PLAY') {
       this.startOrRestartTimer();
     } else if (notification === 'ONTHISDAY_REFRESH_TODAY') {
-      this.gatherImageList(true).then(() => {
+      this.initializePlaylists(true).then(() => {
         this.getNextImage();
       });
     }

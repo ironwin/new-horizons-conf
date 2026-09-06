@@ -16,6 +16,12 @@ Module.register('MMM-OnThisDaySlideshow', {
       database: 'photo'
     },
 
+    // Local folder path(s) for general gallery fallback (when on-this-day photos finish or none found)
+    imagePaths: ['/media/pi/SSD-256-USB/PHOTOS/@IMG_DIR@'],
+    excludePaths: ['@eaDir'],
+    recursiveSubDirectories: true,
+    validImageFileExtensions: 'bmp,jpg,jpeg,gif,png',
+
     // Date range: days before and after today to include (default: 0 = exact today only)
     // 0 = exact today only, N = N days before/after
     dateRangeDays: 0,
@@ -176,7 +182,13 @@ Module.register('MMM-OnThisDaySlideshow', {
 
   socketNotificationReceived(notification, payload) {
     if (notification === 'ONTHISDAY_READY') {
-      Log.info(`[MMM-OnThisDaySlideshow] Ready received. Total photos: ${payload.count}`);
+      Log.info(`[MMM-OnThisDaySlideshow] Ready received. Total photos: ${payload.count || (payload.onThisDayCount + payload.folderCount)} (mode: ${payload.mode || 'onThisDay'})`);
+    } else if (notification === 'ONTHISDAY_MODE_CHANGED') {
+      Log.info(`[MMM-OnThisDaySlideshow] Mode changed to: ${payload.mode} (reason: ${payload.reason})`);
+      this.currentMode = payload.mode;
+    } else if (notification === 'ONTHISDAY_STATUS') {
+      Log.info(`[MMM-OnThisDaySlideshow] Status update: mode=${payload.mode}, onThisDay=${payload.onThisDayCount}, folder=${payload.folderCount}`);
+      this.currentMode = payload.mode;
     } else if (notification === 'ONTHISDAY_DISPLAY_IMAGE') {
       if (payload.identifier === this.identifier) {
         if (this.emptyNoticeDiv) {
@@ -480,40 +492,54 @@ Module.register('MMM-OnThisDaySlideshow', {
     image.src = photo.data;
   },
 
-  getYearsAgoText(photo) {
-    if (!photo) return '';
-    if (photo.isFallback) {
-      if (photo.fallbackReason === 'recent') return '✨ 최근 사진';
-      return '🎲 앨범 사진';
-    }
+  getBadgeInfo(photo) {
+    if (!photo) return { text: '', isFolder: false };
 
     let monthDayStr = '';
     if (photo.taken_at) {
       const m = moment(photo.taken_at);
-      if (m.isValid()) {
-        monthDayStr = m.format('M월 D일');
-      }
+      if (m.isValid()) monthDayStr = m.format('M월 D일');
     }
 
-    if (photo.yearsAgo !== null && photo.yearsAgo !== undefined) {
-      if (photo.isExactToday) {
-        // Exactly on today's month & day
-        if (photo.yearsAgo === 0) {
-          return `🌟 ${this.translate('THIS_YEAR')}`;
-        } else if (photo.yearsAgo > 0) {
-          return `📅 ${photo.yearsAgo}${this.translate('YEARS_AGO')}`;
-        }
-      } else {
-        // Within 1 week before/after
-        if (photo.yearsAgo === 0) {
-          return `🌟 ${this.translate('THIS_YEAR_WEEK')}${monthDayStr ? ` (${monthDayStr})` : ''}`;
-        } else if (photo.yearsAgo > 0) {
-          return `📅 ${photo.yearsAgo}${this.translate('YEARS_AGO_AROUND')}${monthDayStr ? ` (${monthDayStr})` : ' 이번 주'}`;
+    if (photo.playlistType === 'onThisDay' || !photo.playlistType) {
+      if (photo.isFallback) {
+        if (photo.fallbackReason === 'recent') return { text: '✨ 최근 사진', isFolder: false };
+        return { text: '🎲 앨범 사진', isFolder: false };
+      }
+
+      if (photo.yearsAgo !== null && photo.yearsAgo !== undefined) {
+        if (photo.isExactToday) {
+          // Exactly on today's month & day
+          if (photo.yearsAgo === 0) {
+            return { text: `🌟 ${this.translate('THIS_YEAR')}`, isFolder: false };
+          } else if (photo.yearsAgo > 0) {
+            return { text: `📅 ${photo.yearsAgo}${this.translate('YEARS_AGO')}`, isFolder: false };
+          }
+        } else {
+          // Within range before/after
+          if (photo.yearsAgo === 0) {
+            return { text: `🌟 ${this.translate('THIS_YEAR_WEEK')}${monthDayStr ? ` (${monthDayStr})` : ''}`, isFolder: false };
+          } else if (photo.yearsAgo > 0) {
+            return { text: `📅 ${photo.yearsAgo}${this.translate('YEARS_AGO_AROUND')}${monthDayStr ? ` (${monthDayStr})` : ' 이번 주'}`, isFolder: false };
+          }
         }
       }
-    }
 
-    return `📅 ${this.translate('ON_THIS_DAY')}`;
+      return { text: `📅 ${this.translate('ON_THIS_DAY')}`, isFolder: false };
+    } else {
+      // Folder mode
+      if (photo.yearsAgo !== null && photo.yearsAgo > 0) {
+        return {
+          text: `📁 ${photo.yearsAgo}${this.translate('YEARS_AGO_AROUND')}${monthDayStr ? ` (${monthDayStr})` : ''}`,
+          isFolder: true
+        };
+      }
+      return { text: `📁 ${this.translate('FOLDER_GALLERY')}`, isFolder: true };
+    }
+  },
+
+  getYearsAgoText(photo) {
+    return this.getBadgeInfo(photo).text;
   },
 
   updatePortraitInfoContent() {
@@ -523,8 +549,9 @@ Module.register('MMM-OnThisDaySlideshow', {
 
     // 1. Badge
     if (this.config.showYearsAgoBadge) {
-      const badgeText = this.getYearsAgoText(photo);
-      elements.badge.innerHTML = `<span>${badgeText}</span>`;
+      const badgeInfo = this.getBadgeInfo(photo);
+      elements.badge.innerHTML = `<span>${badgeInfo.text}</span>`;
+      elements.badge.className = `portrait-info-badge${badgeInfo.isFolder ? ' folder-mode' : ''}`;
       elements.badge.style.display = 'inline-flex';
     } else {
       elements.badge.style.display = 'none';
@@ -584,7 +611,8 @@ Module.register('MMM-OnThisDaySlideshow', {
     let html = '';
 
     if (fields.includes('yearsago') && this.config.showYearsAgoBadge) {
-      html += `<div class="info-badge">${this.getYearsAgoText(photo)}</div>`;
+      const badgeInfo = this.getBadgeInfo(photo);
+      html += `<div class="info-badge${badgeInfo.isFolder ? ' folder-mode' : ''}">${badgeInfo.text}</div>`;
     }
 
     let dateText = '';
@@ -676,15 +704,22 @@ Module.register('MMM-OnThisDaySlideshow', {
     } else {
       let tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
       let subdomains = 'abcd';
-      if (this.config.portraitMapTileTheme === 'voyager') {
+      const theme = (this.config.portraitMapTileTheme || 'dark').toLowerCase();
+      if (theme === 'voyager') {
         tileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-      } else if (this.config.portraitMapTileTheme === 'osm') {
+      } else if (theme === 'osm') {
         tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
         subdomains = 'abc';
+      } else if (theme === 'light_nolabels' || theme === 'light' || theme === 'white' || theme === 'positron') {
+        tileUrl = 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png';
+      } else if (theme === 'light_all') {
+        tileUrl = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+      } else if (theme === 'dark_nolabels') {
+        tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png';
       }
 
       const apiKey = this.config.portraitMapApiKey || 'cb1_2sbq_1_5ce7e2903fefa17bc3ed219d';
-      if (apiKey && this.config.portraitMapTileTheme !== 'osm' && !tileUrl.includes('?key=')) {
+      if (apiKey && theme !== 'osm' && !tileUrl.includes('?key=')) {
         tileUrl += `?key=${apiKey}`;
       }
 
