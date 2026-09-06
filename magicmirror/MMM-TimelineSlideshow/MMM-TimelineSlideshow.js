@@ -54,12 +54,12 @@ Module.register('MMM-TimelineSlideshow', {
     portraitMapHeight: 'auto',
     portraitMapZoom: 6,
     portraitMapFitCountry: true,
-    portraitMapTileTheme: 'dark',
+    portraitMapTileTheme: 'light', // 'light' (white map), 'voyager', 'dark', 'osm'
     portraitMapApiKey: 'cb1_2sbq_1_5ce7e2903fefa17bc3ed219d',
     portraitMapHighlightCountry: true,
-    portraitMapHighlightColor: '#00d2d3',
+    portraitMapHighlightColor: '#ff4757',
     portraitMapHighlightOpacity: 0.25,
-    portraitMapHighlightBorderColor: '#00d2d3',
+    portraitMapHighlightBorderColor: '#ff4757',
     portraitMapHighlightBorderWeight: 2,
     portraitMapHighlightBorderOpacity: 0.85,
     portraitMapShowLocationName: true,
@@ -98,7 +98,9 @@ Module.register('MMM-TimelineSlideshow', {
     // 10. World Map Intro before Month 1st Photo
     showWorldMapIntro: true,
     worldMapIntroDuration: 10000, // 10 seconds
-    worldMapIntroZoom: 4.5
+    worldMapIntroZoom: 4.5,
+    worldMapIntroTileTheme: 'light',
+    worldMapIntroHighlightColor: '#ff4757'
   },
 
   start() {
@@ -643,6 +645,28 @@ Module.register('MMM-TimelineSlideshow', {
     }
   },
 
+  getTileLayerInfo(theme, apiKey) {
+    const key = apiKey || this.config.portraitMapApiKey || 'cb1_2sbq_1_5ce7e2903fefa17bc3ed219d';
+    const keyParam = key ? `?key=${key}` : '';
+    let tileUrl = `https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png${keyParam}`;
+    let subdomains = 'abcd';
+
+    const t = (theme || 'light').toLowerCase();
+    if (t === 'dark') {
+      tileUrl = `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png${keyParam}`;
+    } else if (t === 'voyager') {
+      tileUrl = `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png${keyParam}`;
+    } else if (t === 'osm') {
+      tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+      subdomains = 'abc';
+    } else {
+      // 'light', 'white', 'positron'
+      tileUrl = `https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png${keyParam}`;
+    }
+
+    return { tileUrl, subdomains, maxZoom: 19 };
+  },
+
   renderWorldMapIntroLeaflet(lat, lon, countryCode) {
     if (typeof L === 'undefined' || !this.worldMapIntroCanvas) return;
 
@@ -659,9 +683,13 @@ Module.register('MMM-TimelineSlideshow', {
         zoomAnimation: true
       });
 
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 19,
-        subdomains: 'abcd'
+      const introTile = this.getTileLayerInfo(
+        this.config.worldMapIntroTileTheme || 'light',
+        this.config.portraitMapApiKey
+      );
+      L.tileLayer(introTile.tileUrl, {
+        maxZoom: introTile.maxZoom,
+        subdomains: introTile.subdomains
       }).addTo(this.worldMapIntroMap);
     }
 
@@ -717,13 +745,14 @@ Module.register('MMM-TimelineSlideshow', {
       })
     };
 
+    const highlightColor = this.config.worldMapIntroHighlightColor || '#ff4757';
     if (filteredGeoJson.features.length > 0) {
       this.worldMapCountryHighlightLayer = L.geoJSON(filteredGeoJson, {
         style: {
-          color: '#00d2d3',
+          color: highlightColor,
           weight: 3,
           opacity: 0.9,
-          fillColor: '#00d2d3',
+          fillColor: highlightColor,
           fillOpacity: 0.28
         }
       }).addTo(this.worldMapIntroMap);
@@ -1075,17 +1104,13 @@ Module.register('MMM-TimelineSlideshow', {
         zoomAnimation: true
       }).setView([targetLat, targetLon], this.config.portraitMapZoom || 6);
 
-      const tileTheme = this.config.portraitMapTileTheme || 'dark';
-      let tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-      if (tileTheme === 'voyager') {
-        tileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-      } else if (tileTheme === 'osm') {
-        tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-      }
-
-      L.tileLayer(tileUrl, {
-        maxZoom: 19,
-        subdomains: 'abcd'
+      const portraitTile = this.getTileLayerInfo(
+        this.config.portraitMapTileTheme || 'light',
+        this.config.portraitMapApiKey
+      );
+      L.tileLayer(portraitTile.tileUrl, {
+        maxZoom: portraitTile.maxZoom,
+        subdomains: portraitTile.subdomains
       }).addTo(this.leafletMap);
     } else {
       this.leafletMap.invalidateSize();

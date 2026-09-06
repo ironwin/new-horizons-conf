@@ -67,12 +67,12 @@ let config = {
 				// 7. 세로 사진 왼쪽 여백 지도 표시 설정
 				showPortraitMap: true,
 				portraitMapPosition: "leftCenter",
-				portraitMapTileTheme: "dark",
+				portraitMapTileTheme: "light",
 				portraitMapApiKey: "cb1_2sbq_1_5ce7e2903fefa17bc3ed219d",
 				portraitMapZoom: 6,
 				portraitMapFitCountry: true,
 				portraitMapHighlightCountry: true,
-				portraitMapHighlightColor: "#00d2d3",
+				portraitMapHighlightColor: "#ff4757",
 
 				// 8. 세로 사진 오른쪽 여백 정보 카드 설정
 				showPortraitInfo: true,
@@ -84,7 +84,13 @@ let config = {
 				showAlbumName: true,
 				hideImageInfoForPortrait: true,
 
-				// 9. 기타 슬라이드쇼 옵션
+				// 9. 매월 첫 사진 전 세계지도 인트로 설정
+				showWorldMapIntro: true,
+				worldMapIntroDuration: 10000,
+				worldMapIntroTileTheme: "light",
+				worldMapIntroHighlightColor: "#ff4757",
+
+				// 10. 기타 슬라이드쇼 옵션
 				transitionImages: true,
 				transitionSpeed: "1.5s"
 			}
