@@ -56,6 +56,11 @@ let config = {
 				showOverallProgress: true,// 전체 진행도 [45 / 1780] 표시 여부
 				showYearsAgoBadge: true,  // 몇 년 전인지 표시 여부 (예: '8년 전')
 
+				// 4-1. 일자 및 도시 타이틀 표시 설정
+				showMonthCenterTitle: true,     // 매일 첫 번째 사진 가운데 큰 흰색 글씨 표시 (전체 크기)
+				showLandscapeDailyHeader: true, // 매일 2번째 사진 이후 모든 가로사진 가운데 상단에 절반 크기 흰색 글씨 표시
+				landscapeDailyHeaderTop: "30px", // 가운데 상단 위치 (기본: 30px)
+
 				// 5. 세로 사진 잘림 방지 (얼굴 확대 방지)
 				autoFitPortrait: true,
 				backgroundSizePortrait: "contain",

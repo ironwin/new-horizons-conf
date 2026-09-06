@@ -43,9 +43,13 @@ Module.register('MMM-TimelineSlideshow', {
     showOverallProgress: true, // 전체 진행도 [45 / 342] 표시 여부
     showYearsAgoBadge: true,   // 몇 년 전인지 표시 여부 (예: '12년 전')
 
-    // 각 월의 첫 번째 사진 가운데 큰 흰색 글씨 표시 설정
+    // 각 일/월의 첫 번째 사진 가운데 큰 흰색 글씨 표시 설정
     showMonthCenterTitle: true,
     monthCenterDateFormat: 'YYYY년 M월 D일',
+
+    // 매일 2번째 사진 이후 모든 가로사진 가운데 상단 헤더 설정 (첫번째 사진 크기의 절반)
+    showLandscapeDailyHeader: true,
+    landscapeDailyHeaderTop: '30px',
 
     // 5. Portrait auto-fitting (contain to avoid clipping faces)
     autoFitPortrait: true,
@@ -270,7 +274,7 @@ Module.register('MMM-TimelineSlideshow', {
           this.updateImageInfo();
         }
 
-        if (this.config.showMonthCenterTitle && this.currentPhoto && this.currentPhoto.monthIndex === 1) {
+        if (this.currentPhoto) {
           this.updateCenterTitle(this.currentPhoto);
         }
 
@@ -532,9 +536,33 @@ Module.register('MMM-TimelineSlideshow', {
     if (!this.centerTitleElements) return;
     const { container, date, location } = this.centerTitleElements;
 
-    if (!photo || photo.monthIndex !== 1) {
+    if (!photo) {
       container.style.display = 'none';
       return;
+    }
+
+    const isFirstPhoto = (photo.monthIndex === 1 || photo.periodIndex === 1);
+    const isSecondOrLater = (photo.monthIndex >= 2 || photo.periodIndex >= 2);
+    const isLandscape = !this.isCurrentPortrait;
+
+    const showFirstIntro = isFirstPhoto && (this.config.showMonthCenterTitle !== false);
+    const showLandscapeHeader = isSecondOrLater && isLandscape && (this.config.showLandscapeDailyHeader !== false);
+
+    if (!showFirstIntro && !showLandscapeHeader) {
+      container.style.display = 'none';
+      return;
+    }
+
+    if (showFirstIntro) {
+      container.className = 'month-center-title position-center';
+      container.style.top = '';
+    } else if (showLandscapeHeader) {
+      container.className = 'month-center-title position-top-center';
+      if (this.config.landscapeDailyHeaderTop) {
+        container.style.top = this.config.landscapeDailyHeaderTop;
+      } else {
+        container.style.top = '';
+      }
     }
 
     let dateText = '';
@@ -547,7 +575,9 @@ Module.register('MMM-TimelineSlideshow', {
     if (!dateText && photo.date_str) {
       dateText = photo.date_str;
     }
-    if (!dateText && photo.ym) {
+    if (!dateText && photo.period) {
+      dateText = photo.period;
+    } else if (!dateText && photo.ym) {
       dateText = photo.ym;
     }
 
@@ -555,16 +585,18 @@ Module.register('MMM-TimelineSlideshow', {
 
     // Only show city/location from EXIF, never folder/album name!
     let locText = '';
-    if (this.currentCity) {
-      if (this.currentCountry && this.currentCountry !== '대한민국' && this.currentCountry !== 'South Korea') {
-        locText = (this.currentCity === this.currentCountry)
-          ? this.currentCity
-          : `${this.currentCity}, ${this.currentCountry}`;
+    const cityVal = photo.city || this.currentCity || '';
+    const countryVal = photo.country || this.currentCountry || '';
+    if (cityVal) {
+      if (countryVal && countryVal !== '대한민국' && countryVal !== 'South Korea') {
+        locText = (cityVal === countryVal)
+          ? cityVal
+          : `${cityVal}, ${countryVal}`;
       } else {
-        locText = this.currentCity;
+        locText = cityVal;
       }
-    } else if (this.currentLocation) {
-      locText = this.currentLocation;
+    } else if (photo.location || this.currentLocation) {
+      locText = photo.location || this.currentLocation;
     }
 
     if (locText) {
@@ -988,10 +1020,8 @@ Module.register('MMM-TimelineSlideshow', {
         });
       }
 
-      // Center Month Intro Title (First photo of each month)
-      if (self.config.showMonthCenterTitle) {
-        self.updateCenterTitle(photo);
-      }
+      // Center Month/Day Intro Title or Landscape Top Header
+      self.updateCenterTitle(photo);
     };
 
     image.src = photo.data;

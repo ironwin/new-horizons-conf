@@ -407,11 +407,9 @@
 }
 
 /* Center Month Title Overlay (First Photo of Each Month) */
+/* Center Month/Day Title Base */
 .MMM-TimelineSlideshow .month-center-title {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -419,6 +417,13 @@
   text-align: center;
   z-index: 15;
   pointer-events: none;
+}
+
+/* 1. First Photo of Each Day: Screen Center, Full Size */
+.MMM-TimelineSlideshow .month-center-title.position-center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   max-width: 90%;
   padding: 44px 72px;
   background: rgba(0, 0, 0, 0.45);
@@ -441,8 +446,8 @@
   }
 }
 
-.MMM-TimelineSlideshow .month-center-date,
-.MMM-TimelineSlideshow .month-center-location {
+.MMM-TimelineSlideshow .month-center-title.position-center .month-center-date,
+.MMM-TimelineSlideshow .month-center-title.position-center .month-center-location {
   font-family: 'Roboto Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: clamp(4.5rem, 6.2vw, 6.5rem);
   font-weight: 800;
@@ -457,8 +462,55 @@
   text-overflow: ellipsis;
 }
 
-.MMM-TimelineSlideshow .month-center-location {
+.MMM-TimelineSlideshow .month-center-title.position-center .month-center-location {
   margin-top: 20px;
+}
+
+/* 2. 2nd Photo and Later (Landscape Only): Top Center, Exactly Half Size */
+.MMM-TimelineSlideshow .month-center-title.position-top-center {
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 75%;
+  padding: 14px 34px;
+  background: rgba(0, 0, 0, 0.40);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  animation: topCenterFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes topCenterFadeIn {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.MMM-TimelineSlideshow .month-center-title.position-top-center .month-center-date,
+.MMM-TimelineSlideshow .month-center-title.position-top-center .month-center-location {
+  font-family: 'Roboto Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: clamp(2.25rem, 3.1vw, 3.25rem); /* Exactly half size of the first photo */
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.95), 0 2px 8px rgba(0, 0, 0, 0.9);
+  text-align: center;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.MMM-TimelineSlideshow .month-center-title.position-top-center .month-center-location {
+  margin-top: 6px;
 }
 
 /* ==========================================================================
