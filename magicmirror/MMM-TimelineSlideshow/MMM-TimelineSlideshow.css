@@ -690,3 +690,256 @@
   }
 }
 
+/* ==========================================================================
+   Full-Screen Startup World Map Overview (Shown for 30s at Initial Startup)
+   ========================================================================== */
+.MMM-TimelineSlideshow .startup-world-map-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+  z-index: 60;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.2s ease-in-out;
+}
+
+.MMM-TimelineSlideshow .startup-world-map-container.visible {
+  opacity: 1;
+}
+
+.MMM-TimelineSlideshow .startup-world-map-container.fade-out {
+  opacity: 0;
+}
+
+.MMM-TimelineSlideshow .startup-world-map-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #eef2f5;
+}
+
+.MMM-TimelineSlideshow .startup-world-map-canvas::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.35) 100%);
+  pointer-events: none;
+  z-index: 400;
+}
+
+/* Startup Overlay Card - Placed along bottom for panoramic map view */
+.MMM-TimelineSlideshow .startup-world-map-overlay {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  width: 94%;
+  max-width: 1420px;
+}
+
+.MMM-TimelineSlideshow .startup-world-map-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px 36px 18px 36px;
+  background: rgba(12, 18, 28, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  width: 100%;
+  box-sizing: border-box;
+  animation: startupCardIntro 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes startupCardIntro {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.MMM-TimelineSlideshow .startup-world-map-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 16px;
+  background: rgba(255, 71, 87, 0.16);
+  border: 1px solid rgba(255, 71, 87, 0.5);
+  border-radius: 999px;
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #ff6b81;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.MMM-TimelineSlideshow .startup-world-map-title {
+  font-family: 'Roboto Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: clamp(1.6rem, 2.2vw, 2.3rem);
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.MMM-TimelineSlideshow .startup-world-map-meta {
+  margin-top: 4px;
+  margin-bottom: 14px;
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.72);
+  letter-spacing: 0.6px;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Travel Year-Months Badges Grid */
+.MMM-TimelineSlideshow .startup-world-map-ym-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 7px 9px;
+  width: 100%;
+  max-height: 230px;
+  overflow: hidden;
+}
+
+.MMM-TimelineSlideshow .startup-ym-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+  padding: 5px 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease;
+}
+
+.MMM-TimelineSlideshow .startup-ym-badge .ym-tag {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #00d2d3;
+  letter-spacing: 0.4px;
+}
+
+.MMM-TimelineSlideshow .startup-ym-badge .dest-tag {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #ffffff;
+}
+
+/* Footer & 30s Countdown Progress Bar */
+.MMM-TimelineSlideshow .startup-world-map-footer {
+  margin-top: 14px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.MMM-TimelineSlideshow .startup-progress-label {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.8px;
+}
+
+.MMM-TimelineSlideshow .startup-progress-track {
+  width: 100%;
+  max-width: 520px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.MMM-TimelineSlideshow .startup-progress-bar {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #ff4757, #00d2d3);
+  border-radius: 999px;
+}
+
+@keyframes startupProgressBar {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+/* Destination pulse dots on startup map */
+.startup-dest-marker {
+  position: relative;
+}
+
+.startup-pulse-dot {
+  width: 14px;
+  height: 14px;
+  background: #ff4757;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255, 71, 87, 0.9), 0 2px 6px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+
+.startup-pulse-dot::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.8px solid #ff4757;
+  animation: startupMarkerPulse 2.4s infinite ease-out;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes startupMarkerPulse {
+  0% {
+    transform: scale(0.3);
+    opacity: 1;
+  }
+  75% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+

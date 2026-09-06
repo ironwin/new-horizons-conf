@@ -68,6 +68,7 @@ let config = {
 
 				// 6. 사진 정보 및 위치 표시 설정 (가로 사진 패널)
 				showImageInfo: true,
+				hideImageInfoForLandscape: true, // 가로 사진일 때 좌측 상단 사진 정보 숨김
 				imageInfo: "timeline, yearsAgo, date, location, album",
 				imageInfoLocation: "topLeft",
 				dateTimeFormat: "YYYY년 M월 D일 HH:mm",
@@ -93,13 +94,17 @@ let config = {
 				showAlbumName: true,
 				hideImageInfoForPortrait: true,
 
-				// 9. 매월 첫 사진 전 세계지도 인트로 설정
+				// 9. 맨처음 시작 시 전체 여행 세계지도 오버뷰 (30초)
+				showStartupWorldMap: true,
+				startupWorldMapDuration: 30000, // 30초간 모든 방문국가 하이라이트 및 여행 년월 표시
+
+				// 10. 매일 첫 사진 전 세계지도 인트로 설정
 				showWorldMapIntro: true,
 				worldMapIntroDuration: 10000,
 				worldMapIntroTileTheme: "light",
 				worldMapIntroHighlightColor: "#ff4757",
 
-				// 10. 기타 슬라이드쇼 옵션
+				// 11. 기타 슬라이드쇼 옵션
 				transitionImages: true,
 				transitionSpeed: "1.5s"
 			}

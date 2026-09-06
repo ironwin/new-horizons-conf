@@ -65,6 +65,46 @@ const COUNTRY_BOUNDS_MAP = {
   za: [[-34.9, 16.4], [-22.1, 32.9]]
 };
 
+const ALBUM_JOURNEY_MAP = {
+  '10.hawaii': { ym: '2010.04', ymKr: '2010년 4월', country: '미국', code: 'us', label: '하와이', lat: 21.307, lon: -157.858 },
+  '11.thailand': { ym: '2011.03', ymKr: '2011년 3월', country: '태국', code: 'th', label: '태국', lat: 13.756, lon: 100.502 },
+  '11.guam': { ym: '2011.09', ymKr: '2011년 9월', country: '미국(괌)', code: 'gu', label: '괌', lat: 13.513, lon: 144.805 },
+  '12.okinawa': { ym: '2012.03', ymKr: '2012년 3월', country: '일본', code: 'jp', label: '오키나와', lat: 26.212, lon: 127.681 },
+  '12.hokkaido': { ym: '2012.12', ymKr: '2012년 12월', country: '일본', code: 'jp', label: '홋카이도', lat: 42.964, lon: 141.288 },
+  '13.singapole': { ym: '2013.02', ymKr: '2013년 2월', country: '싱가포르', code: 'sg', label: '싱가포르', lat: 1.333, lon: 103.831 },
+  '13.osaka': { ym: '2013.12', ymKr: '2013년 12월', country: '일본', code: 'jp', label: '오사카', lat: 34.714, lon: 135.465 },
+  '14.hongkong': { ym: '2014.05', ymKr: '2014년 5월', country: '홍콩', code: 'hk', label: '홍콩', lat: 22.305, lon: 114.164 },
+  '14.tokyo': { ym: '2014.08', ymKr: '2014년 8월', country: '일본', code: 'jp', label: '도쿄', lat: 35.688, lon: 139.694 },
+  '14.athens': { ym: '2014.10', ymKr: '2014년 10월', country: '그리스', code: 'gr', label: '아테네', lat: 37.984, lon: 23.728 },
+  '14.santorini': { ym: '2014.10', ymKr: '2014년 10월', country: '그리스', code: 'gr', label: '산토리니', lat: 36.417, lon: 25.432 },
+  '14.istanbul': { ym: '2014.10', ymKr: '2014년 10월', country: '튀르키예', code: 'tr', label: '이스탄불', lat: 41.008, lon: 28.978 },
+  '15.fukuoka': { ym: '2015.04', ymKr: '2015년 4월', country: '일본', code: 'jp', label: '후쿠오카', lat: 33.590, lon: 130.402 },
+  '15.kohsamui': { ym: '2015.12', ymKr: '2015년 12월', country: '태국', code: 'th', label: '코사무이', lat: 9.696, lon: 100.076 },
+  '16.guam': { ym: '2016.12', ymKr: '2016년 12월', country: '미국(괌)', code: 'gu', label: '괌', lat: 13.514, lon: 144.806 },
+  '17.danang': { ym: '2017.04', ymKr: '2017년 4월', country: '베트남', code: 'vn', label: '다낭', lat: 16.069, lon: 108.224 },
+  '17.vladivostok': { ym: '2017.08', ymKr: '2017년 8월', country: '러시아', code: 'ru', label: '블라디보스토크', lat: 44.295, lon: 132.580 },
+  '17.shizuoka': { ym: '2017.10', ymKr: '2017년 10월', country: '일본', code: 'jp', label: '시즈오카', lat: 34.975, lon: 138.475 },
+  '18.SanFrancisco': { ym: '2018.05', ymKr: '2018년 5월', country: '미국', code: 'us', label: '샌프란시스코', lat: 37.675, lon: -122.309 },
+  '18.LosAngeles': { ym: '2018.05', ymKr: '2018년 5월', country: '미국', code: 'us', label: '로스앤젤레스', lat: 34.062, lon: -118.261 },
+  '18.Lasvegas': { ym: '2018.05', ymKr: '2018년 5월', country: '미국', code: 'us', label: '라스베이거스', lat: 36.234, lon: -113.620 },
+  '18.Niagara': { ym: '2018.05', ymKr: '2018년 5월', country: '미국/캐나다', code: 'ca', label: '나이아가라', lat: 43.151, lon: -79.052 },
+  '18.NewYork': { ym: '2018.05', ymKr: '2018년 5월', country: '미국', code: 'us', label: '뉴욕', lat: 40.781, lon: -74.136 },
+  '18.Porto-Lisboa': { ym: '2018.05', ymKr: '2018년 5월', country: '포르투갈', code: 'pt', label: '포르투·리스본', lat: 41.152, lon: -8.630 },
+  '18.Sevilla': { ym: '2018.05', ymKr: '2018년 5월', country: '스페인', code: 'es', label: '세비야', lat: 37.367, lon: -5.927 },
+  '18.Malaga': { ym: '2018.05', ymKr: '2018년 5월', country: '스페인', code: 'es', label: '말라가', lat: 36.712, lon: -4.461 },
+  '18.05.Barcelona': { ym: '2018.05', ymKr: '2018년 5월', country: '스페인', code: 'es', label: '바르셀로나', lat: 41.516, lon: 2.282 },
+  '18.06.Maldives': { ym: '2018.06', ymKr: '2018년 6월', country: '몰디브', code: 'mv', label: '몰디브', lat: 5.577, lon: 69.702 },
+  '19.05.tokyo': { ym: '2019.05', ymKr: '2019년 5월', country: '일본', code: 'jp', label: '도쿄', lat: 35.630, lon: 139.677 },
+  '23.12.okinawa': { ym: '2023.12', ymKr: '2023년 12월', country: '일본', code: 'jp', label: '오키나와', lat: 26.568, lon: 127.906 },
+  '24.09.phuket': { ym: '2024.09', ymKr: '2024년 9월', country: '태국', code: 'th', label: '푸켓', lat: 8.124, lon: 98.642 },
+  '24.14.swiss': { ym: '2024.12', ymKr: '2024년 12월', country: '스위스', code: 'ch', label: '스위스', lat: 46.619, lon: 8.167 },
+  '25.usa': { ym: '2025.01', ymKr: '2025년 1월', country: '미국', code: 'us', label: '미국 서부', lat: 37.127, lon: -116.581 },
+  '25.05.sydney': { ym: '2025.05', ymKr: '2025년 5월', country: '호주', code: 'au', label: '시드니', lat: -33.837, lon: 151.084 },
+  '25.07.sapporo': { ym: '2025.07', ymKr: '2025년 7월', country: '일본', code: 'jp', label: '삿포로', lat: 43.338, lon: 141.935 },
+  '26.01.shanghai': { ym: '2026.01', ymKr: '2026년 1월', country: '중국', code: 'cn', label: '상하이', lat: 31.231, lon: 121.488 },
+  '26.04.nagoya': { ym: '2026.04', ymKr: '2026년 4월', country: '일본', code: 'jp', label: '나고야', lat: 35.264, lon: 136.918 }
+};
+
 module.exports = NodeHelper.create({
   start() {
     this.pool = null;
@@ -382,9 +422,108 @@ module.exports = NodeHelper.create({
     }
   },
 
+  async buildTravelSummary() {
+    const journeys = {};
+    const countryCodes = new Set([
+      'us', 'th', 'gu', 'jp', 'sg', 'hk', 'gr', 'tr', 'vn', 'ru', 'ca', 'pt', 'es', 'mv', 'ch', 'au', 'cn'
+    ]);
+    const destinations = [];
+
+    // 1. Initialize from curated ALBUM_JOURNEY_MAP
+    Object.entries(ALBUM_JOURNEY_MAP).forEach(([alb, info]) => {
+      if (!journeys[info.ym]) {
+        journeys[info.ym] = {
+          ym: info.ym,
+          ymKr: info.ymKr,
+          destinations: [],
+          countries: new Set()
+        };
+      }
+      if (!journeys[info.ym].destinations.includes(info.label)) {
+        journeys[info.ym].destinations.push(info.label);
+      }
+      journeys[info.ym].countries.add(info.country);
+      if (info.code) countryCodes.add(info.code.toLowerCase());
+
+      destinations.push({
+        label: info.label,
+        country: info.country,
+        code: info.code,
+        lat: info.lat,
+        lon: info.lon,
+        ym: info.ym
+      });
+    });
+
+    // 2. Query DB for any dynamic foreign albums not yet in ALBUM_JOURNEY_MAP
+    try {
+      if (this.pool) {
+        const rows = await this.pool.query(`
+          SELECT album,
+                 DATE_FORMAT(taken_at, '%Y.%m') as ym,
+                 DATE_FORMAT(taken_at, '%Y년 %c월') as ym_kr,
+                 AVG(latitude) as lat,
+                 AVG(longitude) as lon,
+                 COUNT(*) as cnt
+          FROM photos
+          WHERE has_gps = 1
+            AND (latitude < 33.1 OR latitude > 38.6 OR longitude < 126.0 OR longitude > 129.6)
+            AND album NOT LIKE '%Ulleng%'
+            AND taken_at < '2026-09-01'
+          GROUP BY album, ym
+          HAVING cnt >= 10
+        `);
+
+        for (const r of rows) {
+          if (!ALBUM_JOURNEY_MAP[r.album] && r.ym) {
+            const cleanLabel = (r.album || '').replace(/^[0-9]+(\.[0-9]+)?\./, '');
+            if (!journeys[r.ym]) {
+              journeys[r.ym] = {
+                ym: r.ym,
+                ymKr: r.ym_kr || r.ym,
+                destinations: [cleanLabel],
+                countries: new Set()
+              };
+            } else if (!journeys[r.ym].destinations.includes(cleanLabel)) {
+              journeys[r.ym].destinations.push(cleanLabel);
+            }
+            if (r.lat && r.lon) {
+              destinations.push({
+                label: cleanLabel,
+                lat: parseFloat(r.lat),
+                lon: parseFloat(r.lon),
+                ym: r.ym
+              });
+            }
+          }
+        }
+      }
+    } catch (err) {
+      Log.error('[MMM-TimelineSlideshow] Error querying dynamic travel summary:', err);
+    }
+
+    const travelYms = Object.values(journeys)
+      .sort((a, b) => a.ym.localeCompare(b.ym))
+      .map(item => ({
+        ym: item.ym,
+        ymKr: item.ymKr,
+        label: item.destinations.join(' · '),
+        countries: Array.from(item.countries)
+      }));
+
+    return {
+      firstPeriod: travelYms[0]?.ym || '2010.04',
+      lastPeriod: travelYms[travelYms.length - 1]?.ym || '2026.04',
+      countries: Array.from(countryCodes),
+      destinations: destinations,
+      travelYms: travelYms
+    };
+  },
+
   async initializeTimeline() {
     this.timelineList = await this.fetchTimelinePhotos();
     this.timelineIndex = 0;
+    this.travelSummary = await this.buildTravelSummary();
 
     if (this.timelineList.length === 0) {
       Log.warn('[MMM-TimelineSlideshow] Timeline empty. Retrying in 1 minute.');
@@ -424,7 +563,8 @@ module.exports = NodeHelper.create({
       lastPeriod: this.timelineList[this.timelineList.length - 1]?.period,
       firstYm: this.timelineList[0]?.period,
       lastYm: this.timelineList[this.timelineList.length - 1]?.period,
-      startIndex: this.timelineIndex
+      startIndex: this.timelineIndex,
+      travelSummary: this.travelSummary
     });
   },
 
@@ -716,7 +856,16 @@ module.exports = NodeHelper.create({
       this.setupImageEndpoint();
       this.initDbPool(this.config.db || {});
       this.initializeTimeline().then(() => {
-        this.getNextImage();
+        const showStartupMap = (this.config?.showStartupWorldMap !== false);
+        const startupDuration = this.config?.startupWorldMapDuration || 30000;
+        if (showStartupMap && this.timelineList.length > 0) {
+          Log.info(`[MMM-TimelineSlideshow] Showing startup world map overview for ${startupDuration / 1000}s...`);
+          setTimeout(() => {
+            this.getNextImage();
+          }, startupDuration);
+        } else {
+          this.getNextImage();
+        }
       });
     } else if (notification === 'TIMELINESLIDESHOW_NEXT_IMAGE') {
       this.getNextImage();
