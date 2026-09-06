@@ -168,6 +168,20 @@ Module.register('MMM-TimelineSlideshow', {
       .then(data => {
         this.countriesGeoData = data;
         Log.info('[MMM-TimelineSlideshow] countries.geo.json loaded successfully.');
+        if (this.pendingWorldMapHighlight) {
+          this.updateWorldMapCountryHighlight(
+            this.pendingWorldMapHighlight.countryCode,
+            this.pendingWorldMapHighlight.countryName
+          );
+          this.pendingWorldMapHighlight = null;
+        }
+        if (this.pendingPortraitHighlight && this.leafletMap) {
+          this.updateCountryHighlight(
+            this.pendingPortraitHighlight.countryCode,
+            this.pendingPortraitHighlight.countryName
+          );
+          this.pendingPortraitHighlight = null;
+        }
       })
       .catch(err => {
         Log.error('[MMM-TimelineSlideshow] Failed to load countries.geo.json:', err);
@@ -237,8 +251,8 @@ Module.register('MMM-TimelineSlideshow', {
           if (locText) {
             this.worldMapIntroElements.city.textContent = locText;
           }
-          if (this.currentCountryCode) {
-            this.updateWorldMapCountryHighlight(this.currentCountryCode);
+          if (this.currentCountryCode || this.currentCountry) {
+            this.updateWorldMapCountryHighlight(this.currentCountryCode, this.currentCountry);
           }
         }
 
@@ -258,8 +272,8 @@ Module.register('MMM-TimelineSlideshow', {
           if (this.portraitMapLocationText) {
             this.portraitMapLocationText.textContent = this.currentLocation;
           }
-          if (this.currentCountryCode && this.config.portraitMapHighlightCountry) {
-            this.updateCountryHighlight(this.currentCountryCode);
+          if ((this.currentCountryCode || this.currentCountry) && this.config.portraitMapHighlightCountry) {
+            this.updateCountryHighlight(this.currentCountryCode, this.currentCountry);
           }
           if (payload.countryBounds && this.config.portraitMapFitCountry && this.leafletMap) {
             this.leafletMap.invalidateSize();
@@ -615,7 +629,12 @@ Module.register('MMM-TimelineSlideshow', {
       container.classList.add('visible');
     }, 20);
 
-    this.renderWorldMapIntroLeaflet(photo.latitude, photo.longitude, photo.countryCode || this.currentCountryCode);
+    this.renderWorldMapIntroLeaflet(
+      photo.latitude,
+      photo.longitude,
+      photo.countryCode || this.currentCountryCode,
+      photo.country || this.currentCountry
+    );
 
     if (this.worldMapIntroTimer) {
       clearTimeout(this.worldMapIntroTimer);
@@ -667,7 +686,72 @@ Module.register('MMM-TimelineSlideshow', {
     return { tileUrl, subdomains, maxZoom: 19 };
   },
 
-  renderWorldMapIntroLeaflet(lat, lon, countryCode) {
+  getCountryGeoJsonFeatures(countryCode, countryName) {
+    if (!this.countriesGeoData || !this.countriesGeoData.features) return [];
+
+    const code = (countryCode || '').trim().toLowerCase();
+    const name = (countryName || '').trim().toLowerCase();
+
+    const KOREAN_COUNTRY_MAP = {
+      '베트남': 'vn', 'vietnam': 'vn',
+      '일본': 'jp', 'japan': 'jp',
+      '호주': 'au', '오스트레일리아': 'au', 'australia': 'au',
+      '스위스': 'ch', 'switzerland': 'ch',
+      '스페인': 'es', 'spain': 'es',
+      '태국': 'th', 'thailand': 'th',
+      '중국': 'cn', 'china': 'cn',
+      '미국': 'us', 'united states': 'us', 'usa': 'us',
+      '프랑스': 'fr', 'france': 'fr',
+      '이탈리아': 'it', 'italy': 'it',
+      '독일': 'de', 'germany': 'de',
+      '영국': 'gb', 'united kingdom': 'gb',
+      '몰디브': 'mv', 'maldives': 'mv',
+      '필리핀': 'ph', 'philippines': 'ph',
+      '인도네시아': 'id', 'indonesia': 'id',
+      '싱가포르': 'sg', 'singapore': 'sg',
+      '말레이시아': 'my', 'malaysia': 'my',
+      '대만': 'tw', 'taiwan': 'tw',
+      '홍콩': 'hk', 'hong kong': 'hk',
+      '마카오': 'mo', 'macau': 'mo',
+      '러시아': 'ru', 'russia': 'ru',
+      '캐나다': 'ca', 'canada': 'ca',
+      '터키': 'tr', '튀르키예': 'tr', 'turkey': 'tr',
+      '그리스': 'gr', 'greece': 'gr',
+      '오스트리아': 'at', 'austria': 'at',
+      '체코': 'cz', 'czech republic': 'cz',
+      '괌': 'gu', 'guam': 'gu',
+      '하와이': 'us'
+    };
+
+    let mappedCode = '';
+    if (code && KOREAN_COUNTRY_MAP[code]) {
+      mappedCode = KOREAN_COUNTRY_MAP[code];
+    } else if (name && KOREAN_COUNTRY_MAP[name]) {
+      mappedCode = KOREAN_COUNTRY_MAP[name];
+    } else if (name) {
+      for (const [k, v] of Object.entries(KOREAN_COUNTRY_MAP)) {
+        if (name.includes(k) || k.includes(name)) {
+          mappedCode = v;
+          break;
+        }
+      }
+    }
+
+    const targetCode = mappedCode || code;
+
+    return this.countriesGeoData.features.filter(f => {
+      const p = f.properties || {};
+      const c = (p.code || p.ISO_A2 || p.iso_a2 || '').toLowerCase();
+      const c3 = (p.code3 || '').toLowerCase();
+      const n = (p.name || '').toLowerCase();
+
+      if (targetCode && (c === targetCode || c3 === targetCode)) return true;
+      if (name && (n === name || n.includes(name))) return true;
+      return false;
+    });
+  },
+
+  renderWorldMapIntroLeaflet(lat, lon, countryCode, countryName) {
     if (typeof L === 'undefined' || !this.worldMapIntroCanvas) return;
 
     const fallbackLat = 20;
@@ -722,41 +806,42 @@ Module.register('MMM-TimelineSlideshow', {
       this.worldMapIntroMarker = L.marker([lat, lon], { icon: pulseIcon }).addTo(this.worldMapIntroMap);
     }
 
-    if (countryCode) {
-      this.updateWorldMapCountryHighlight(countryCode);
+    if (countryCode || countryName) {
+      this.updateWorldMapCountryHighlight(countryCode, countryName);
     }
   },
 
-  updateWorldMapCountryHighlight(countryCode) {
-    if (!this.worldMapIntroMap || !this.countriesGeoData || !countryCode) return;
+  updateWorldMapCountryHighlight(countryCode, countryName) {
+    if (!this.worldMapIntroMap) return;
+
+    if (!this.countriesGeoData) {
+      this.pendingWorldMapHighlight = { countryCode, countryName };
+      return;
+    }
 
     if (this.worldMapCountryHighlightLayer) {
       this.worldMapIntroMap.removeLayer(this.worldMapCountryHighlightLayer);
       this.worldMapCountryHighlightLayer = null;
     }
 
-    const upperCode = countryCode.toUpperCase();
+    const matchedFeatures = this.getCountryGeoJsonFeatures(countryCode, countryName);
+    if (!matchedFeatures || matchedFeatures.length === 0) return;
+
     const filteredGeoJson = {
       type: 'FeatureCollection',
-      features: this.countriesGeoData.features.filter(f => {
-        const p = f.properties || {};
-        const iso2 = (p.ISO_A2 || p.iso_a2 || p.wb_a2 || '').toUpperCase();
-        return iso2 === upperCode;
-      })
+      features: matchedFeatures
     };
 
     const highlightColor = this.config.worldMapIntroHighlightColor || '#ff4757';
-    if (filteredGeoJson.features.length > 0) {
-      this.worldMapCountryHighlightLayer = L.geoJSON(filteredGeoJson, {
-        style: {
-          color: highlightColor,
-          weight: 3,
-          opacity: 0.9,
-          fillColor: highlightColor,
-          fillOpacity: 0.28
-        }
-      }).addTo(this.worldMapIntroMap);
-    }
+    this.worldMapCountryHighlightLayer = L.geoJSON(filteredGeoJson, {
+      style: {
+        color: highlightColor,
+        weight: 3.5,
+        opacity: 0.95,
+        fillColor: highlightColor,
+        fillOpacity: 0.28
+      }
+    }).addTo(this.worldMapIntroMap);
   },
 
   displayImage(photo) {
@@ -1132,8 +1217,8 @@ Module.register('MMM-TimelineSlideshow', {
       this.leafletMarker = L.marker([lat, lon], { icon: pulseIcon }).addTo(this.leafletMap);
     }
 
-    if (this.currentCountryCode && this.config.portraitMapHighlightCountry) {
-      this.updateCountryHighlight(this.currentCountryCode);
+    if ((this.currentCountryCode || this.currentCountry) && this.config.portraitMapHighlightCountry) {
+      this.updateCountryHighlight(this.currentCountryCode, this.currentCountry);
     }
 
     if (this.currentCountryBounds && this.config.portraitMapFitCountry) {
@@ -1145,37 +1230,40 @@ Module.register('MMM-TimelineSlideshow', {
     }
   },
 
-  updateCountryHighlight(countryCode) {
-    if (!this.leafletMap || !this.countriesGeoData || !countryCode) return;
+  updateCountryHighlight(countryCode, countryName) {
+    if (!this.leafletMap) return;
+
+    if (!this.countriesGeoData) {
+      this.pendingPortraitHighlight = { countryCode, countryName };
+      return;
+    }
 
     if (this.countryHighlightLayer) {
       this.leafletMap.removeLayer(this.countryHighlightLayer);
       this.countryHighlightLayer = null;
     }
 
-    const upperCode = countryCode.toUpperCase();
-    const self = this;
+    const matchedFeatures = this.getCountryGeoJsonFeatures(countryCode, countryName);
+    if (!matchedFeatures || matchedFeatures.length === 0) return;
 
     const filteredGeoJson = {
       type: 'FeatureCollection',
-      features: this.countriesGeoData.features.filter(f => {
-        const p = f.properties || {};
-        const iso2 = (p.ISO_A2 || p.iso_a2 || p.wb_a2 || '').toUpperCase();
-        return iso2 === upperCode;
-      })
+      features: matchedFeatures
     };
 
-    if (filteredGeoJson.features.length > 0) {
-      this.countryHighlightLayer = L.geoJSON(filteredGeoJson, {
-        style: {
-          color: self.config.portraitMapHighlightBorderColor || '#00d2d3',
-          weight: self.config.portraitMapHighlightBorderWeight || 2,
-          opacity: self.config.portraitMapHighlightBorderOpacity || 0.85,
-          fillColor: self.config.portraitMapHighlightColor || '#00d2d3',
-          fillOpacity: self.config.portraitMapHighlightOpacity || 0.25
-        }
-      }).addTo(this.leafletMap);
-    }
+    const self = this;
+    const borderCol = self.config.portraitMapHighlightBorderColor || self.config.portraitMapHighlightColor || '#ff4757';
+    const fillCol = self.config.portraitMapHighlightColor || '#ff4757';
+
+    this.countryHighlightLayer = L.geoJSON(filteredGeoJson, {
+      style: {
+        color: borderCol,
+        weight: self.config.portraitMapHighlightBorderWeight || 2.5,
+        opacity: self.config.portraitMapHighlightBorderOpacity || 0.9,
+        fillColor: fillCol,
+        fillOpacity: self.config.portraitMapHighlightOpacity || 0.25
+      }
+    }).addTo(this.leafletMap);
   },
 
   hidePortraitMap() {
