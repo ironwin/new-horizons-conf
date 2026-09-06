@@ -151,7 +151,19 @@ module.exports = NodeHelper.create({
       queryParams.push(Number(config.maxYear));
     }
 
-    const excludeAlbums = config.excludeAlbums || ['wedding', '웨딩', '결혼'];
+    const excludeKorea = config.excludeKorea !== false;
+    let koreaFilterSql = '';
+    if (excludeKorea) {
+      koreaFilterSql = ' AND NOT (has_gps = 1 AND latitude BETWEEN 33.1 AND 38.6 AND longitude BETWEEN 126.0 AND 129.6)';
+    }
+
+    const defaultExcludes = [
+      'wedding', '웨딩', '결혼',
+      'gangwon', '강원', 'yeosu', '여수', 'gangneung', '강릉',
+      'jeju', '제주', 'namhae', '남해', 'ulleng', '울릉',
+      '1q', '2q', 'gonjiam', '곤지암'
+    ];
+    const excludeAlbums = config.excludeAlbums || (excludeKorea ? defaultExcludes : ['wedding', '웨딩', '결혼']);
     if (Array.isArray(excludeAlbums) && excludeAlbums.length > 0) {
       const conditions = [];
       for (const kw of excludeAlbums) {
@@ -174,14 +186,14 @@ module.exports = NodeHelper.create({
                width, height, orientation, is_portrait, has_gps, latitude, longitude, altitude,
                ROW_NUMBER() OVER (PARTITION BY DATE_FORMAT(taken_at, '%Y-%m') ORDER BY RAND()) as rn
         FROM photos
-        WHERE taken_at IS NOT NULL ${yearFilterSql} ${excludeFilterSql}
+        WHERE taken_at IS NOT NULL ${yearFilterSql} ${excludeFilterSql} ${koreaFilterSql}
       ) sub
       WHERE rn <= ?
       ORDER BY ym ${sortOrder}, taken_at ASC
     `;
 
     try {
-      Log.info(`[MMM-TimelineSlideshow] Querying timeline photos (perMonth: ${photosPerMonth}, order: ${sortOrder})...`);
+      Log.info(`[MMM-TimelineSlideshow] Querying timeline photos (perMonth: ${photosPerMonth}, order: ${sortOrder}, excludeKorea: ${excludeKorea})...`);
       const startTime = Date.now();
       const [rows] = await this.pool.query(sql, queryParams);
       Log.info(`[MMM-TimelineSlideshow] DB returned ${rows.length} candidate rows in ${Date.now() - startTime}ms.`);
@@ -205,6 +217,12 @@ module.exports = NodeHelper.create({
             (r.filepath && r.filepath.toLowerCase().includes(kw.toLowerCase()))
           );
           if (isExcluded) continue;
+
+          if (excludeKorea && r.has_gps && r.latitude && r.longitude) {
+            if (r.latitude >= 33.1 && r.latitude <= 38.6 && r.longitude >= 126.0 && r.longitude <= 129.6) {
+              continue;
+            }
+          }
 
           list.push(r);
         }
@@ -482,7 +500,28 @@ module.exports = NodeHelper.create({
       const addr = data.address || {};
       const country = addr.country || '';
       const countryCode = (addr.country_code || '').toLowerCase();
-      const city = addr.city || addr.county || addr.province || addr.state || '';
+      let city = addr.city || addr.town || addr.municipality || addr.county || addr.province || addr.state || '';
+
+      const displayName = data.display_name || '';
+      // Clean up known tourist destinations where OSM hierarchy differs
+      if (addr.state === 'Guam' || countryCode === 'gu') {
+        city = '괌';
+      } else if (displayName.includes('산토리니') || displayName.includes('티라') || (addr.city && addr.city.includes('Θήρας'))) {
+        city = '산토리니';
+      } else if (displayName.includes('코사무이') || (addr.city && addr.city.includes('เกาะสมุย'))) {
+        city = '코사무이';
+      } else if (displayName.includes('인터라켄') || addr.town === '인터라켄') {
+        city = '인터라켄';
+      } else if (city.includes('Niagara') || displayName.includes('나이아가라')) {
+        city = '나이아가라';
+      } else if (displayName.includes('도쿄') || addr.state === '도쿄도') {
+        city = '도쿄';
+      } else if (displayName.includes('말라가') || addr.state_district === '말라가') {
+        city = '말라가';
+      } else if (displayName.includes('호놀룰루') || displayName.includes('하와이')) {
+        city = '하와이(호놀룰루)';
+      }
+
       const formatted = this.formatLocationAddress(data);
       const countryBounds = this.resolveCountryBounds(countryCode, data.boundingbox);
 

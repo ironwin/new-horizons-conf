@@ -440,9 +440,13 @@ Module.register('MMM-TimelineSlideshow', {
     // Only show city/location from EXIF, never folder/album name!
     let locText = '';
     if (this.currentCity) {
-      locText = (this.currentCountry && this.currentCountry !== '대한민국' && this.currentCountry !== 'South Korea')
-        ? `${this.currentCity}, ${this.currentCountry}`
-        : this.currentCity;
+      if (this.currentCountry && this.currentCountry !== '대한민국' && this.currentCountry !== 'South Korea') {
+        locText = (this.currentCity === this.currentCountry)
+          ? this.currentCity
+          : `${this.currentCity}, ${this.currentCountry}`;
+      } else {
+        locText = this.currentCity;
+      }
     } else if (this.currentLocation) {
       locText = this.currentLocation;
     }
