@@ -478,6 +478,7 @@ Module.register('MMM-TimelineSlideshow', {
       transitionDiv.style.left = '0';
       transitionDiv.style.width = '100%';
       transitionDiv.style.height = '100%';
+      transitionDiv.style.backgroundColor = '#000000';
 
       if (self.config.transitionImages) {
         const transList = self.config.transitions || ['opacity'];
@@ -490,6 +491,7 @@ Module.register('MMM-TimelineSlideshow', {
       const imageDiv = document.createElement('div');
       imageDiv.className = 'image';
       imageDiv.style.backgroundImage = `url("${image.src}")`;
+      imageDiv.style.backgroundColor = '#000000';
 
       const rawWidth = image.naturalWidth || image.width;
       const rawHeight = image.naturalHeight || image.height;
@@ -517,7 +519,14 @@ Module.register('MMM-TimelineSlideshow', {
       transitionDiv.appendChild(imageDiv);
       self.imagesDiv.appendChild(transitionDiv);
 
-      // Clean up previous image container after animation
+      // Clean up previous image container after animation so photos NEVER overlap!
+      const durationMs = (parseFloat(self.config.transitionSpeed) || 1.5) * 1000;
+      setTimeout(() => {
+        while (self.imagesDiv && self.imagesDiv.childNodes.length > 1) {
+          self.imagesDiv.removeChild(self.imagesDiv.childNodes[0]);
+        }
+      }, durationMs + 50);
+
       while (self.imagesDiv.childNodes.length > 2) {
         self.imagesDiv.removeChild(self.imagesDiv.childNodes[0]);
       }
