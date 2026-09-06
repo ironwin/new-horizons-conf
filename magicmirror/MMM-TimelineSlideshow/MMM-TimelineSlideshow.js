@@ -93,7 +93,12 @@ Module.register('MMM-TimelineSlideshow', {
       'flipX',
       'flipY'
     ],
-    transitionTimingFunction: 'cubic-bezier(.17,.67,.35,.96)'
+    transitionTimingFunction: 'cubic-bezier(.17,.67,.35,.96)',
+
+    // 10. World Map Intro before Month 1st Photo
+    showWorldMapIntro: true,
+    worldMapIntroDuration: 10000, // 10 seconds
+    worldMapIntroZoom: 4.5
   },
 
   start() {
@@ -118,9 +123,16 @@ Module.register('MMM-TimelineSlideshow', {
     this.centerTitleContainer = null;
     this.centerTitleElements = null;
 
-    if (this.config.showPortraitMap && this.config.portraitMapHighlightCountry) {
-      this.loadCountriesGeoJson();
-    }
+    // World Map Intro elements
+    this.worldMapIntroContainer = null;
+    this.worldMapIntroCanvas = null;
+    this.worldMapIntroElements = null;
+    this.worldMapIntroMap = null;
+    this.worldMapIntroMarker = null;
+    this.worldMapCountryHighlightLayer = null;
+    this.worldMapIntroTimer = null;
+
+    this.loadCountriesGeoJson();
   },
 
   getScripts() {
@@ -166,14 +178,17 @@ Module.register('MMM-TimelineSlideshow', {
       notification === 'BACKGROUNDSLIDESHOW_NEXT' ||
       notification === 'MYSLIDESHOW_NEXT'
     ) {
+      this.stopWorldMapIntro();
       this.sendSocketNotification('TIMELINESLIDESHOW_NEXT_IMAGE');
     } else if (
       notification === 'TIMELINESLIDESHOW_PREV' ||
       notification === 'BACKGROUNDSLIDESHOW_PREV' ||
       notification === 'MYSLIDESHOW_PREV'
     ) {
+      this.stopWorldMapIntro();
       this.sendSocketNotification('TIMELINESLIDESHOW_PREV_IMAGE');
     } else if (notification === 'TIMELINESLIDESHOW_RELOAD') {
+      this.stopWorldMapIntro();
       this.sendSocketNotification('TIMELINESLIDESHOW_RELOAD_TIMELINE');
     }
   },
@@ -203,6 +218,27 @@ Module.register('MMM-TimelineSlideshow', {
         this.currentCountry = payload.country || '';
         this.currentCountryCode = (payload.countryCode || '').toLowerCase();
         this.currentCountryBounds = payload.countryBounds || null;
+
+        if (this.worldMapIntroElements && this.worldMapIntroContainer && this.worldMapIntroContainer.classList.contains('visible')) {
+          let locText = '';
+          if (this.currentCity) {
+            if (this.currentCountry && this.currentCountry !== '대한민국' && this.currentCountry !== 'South Korea') {
+              locText = (this.currentCity === this.currentCountry)
+                ? this.currentCity
+                : `${this.currentCity}, ${this.currentCountry}`;
+            } else {
+              locText = this.currentCity;
+            }
+          } else if (this.currentLocation) {
+            locText = this.currentLocation;
+          }
+          if (locText) {
+            this.worldMapIntroElements.city.textContent = locText;
+          }
+          if (this.currentCountryCode) {
+            this.updateWorldMapCountryHighlight(this.currentCountryCode);
+          }
+        }
 
         if (this.config.showImageInfo && (!this.isCurrentPortrait || !this.config.hideImageInfoForPortrait)) {
           this.updateImageInfo();
@@ -260,6 +296,10 @@ Module.register('MMM-TimelineSlideshow', {
       this.centerTitleContainer = this.createCenterTitleDiv(wrapper);
     }
 
+    if (this.config.showWorldMapIntro !== false) {
+      this.worldMapIntroContainer = this.createWorldMapIntroDiv(wrapper);
+    }
+
     this.emptyNoticeDiv = document.createElement('div');
     this.emptyNoticeDiv.className = 'empty-notice';
     this.emptyNoticeDiv.style.display = 'none';
@@ -279,6 +319,7 @@ Module.register('MMM-TimelineSlideshow', {
     if (this.emptyNoticeDiv) {
       this.emptyNoticeDiv.style.display = 'flex';
     }
+    this.stopWorldMapIntro();
     this.hidePortraitMap();
     if (this.portraitInfoContainer) {
       this.portraitInfoContainer.classList.remove('visible');
@@ -412,6 +453,55 @@ Module.register('MMM-TimelineSlideshow', {
     return container;
   },
 
+  createWorldMapIntroDiv(wrapper) {
+    const container = document.createElement('div');
+    container.className = 'world-map-intro-container';
+    container.style.display = 'none';
+
+    const canvas = document.createElement('div');
+    canvas.className = 'world-map-intro-canvas';
+    container.appendChild(canvas);
+    this.worldMapIntroCanvas = canvas;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'world-map-intro-overlay';
+
+    const card = document.createElement('div');
+    card.className = 'world-map-intro-card';
+
+    const badge = document.createElement('div');
+    badge.className = 'world-map-intro-badge';
+    badge.textContent = '✈️ 다음 여행지';
+    card.appendChild(badge);
+
+    const date = document.createElement('div');
+    date.className = 'world-map-intro-date';
+    card.appendChild(date);
+
+    const city = document.createElement('div');
+    city.className = 'world-map-intro-city';
+    card.appendChild(city);
+
+    const meta = document.createElement('div');
+    meta.className = 'world-map-intro-meta';
+    card.appendChild(meta);
+
+    overlay.appendChild(card);
+    container.appendChild(overlay);
+
+    this.worldMapIntroElements = {
+      container,
+      card,
+      badge,
+      date,
+      city,
+      meta
+    };
+
+    wrapper.appendChild(container);
+    return container;
+  },
+
   updateCenterTitle(photo) {
     if (!this.centerTitleElements) return;
     const { container, date, location } = this.centerTitleElements;
@@ -462,17 +552,216 @@ Module.register('MMM-TimelineSlideshow', {
     container.style.display = 'flex';
   },
 
+  showWorldMapIntro(photo, onComplete) {
+    if (!this.worldMapIntroContainer || !photo) {
+      if (onComplete) onComplete();
+      return;
+    }
+
+    if (this.centerTitleContainer) {
+      this.centerTitleContainer.style.display = 'none';
+    }
+    if (this.imageInfoDiv) {
+      this.imageInfoDiv.style.display = 'none';
+    }
+    this.hidePortraitMap();
+    if (this.portraitInfoContainer) {
+      this.portraitInfoContainer.classList.remove('visible');
+    }
+
+    const { container, date, city, meta } = this.worldMapIntroElements;
+    const duration = (this.config.worldMapIntroDuration || 10000);
+
+    // Format Date
+    let dateText = '';
+    if (photo.taken_at) {
+      const m = moment(photo.taken_at);
+      if (m.isValid()) {
+        dateText = m.format(this.config.monthCenterDateFormat || 'YYYY년 M월 D일');
+      }
+    }
+    if (!dateText && photo.date_str) dateText = photo.date_str;
+    if (!dateText && photo.ym) dateText = photo.ym;
+    date.textContent = dateText;
+
+    // Format City & Country
+    let locText = '';
+    const cityVal = photo.city || this.currentCity || '';
+    const countryVal = photo.country || this.currentCountry || '';
+    if (cityVal) {
+      if (countryVal && countryVal !== '대한민국' && countryVal !== 'South Korea') {
+        locText = (cityVal === countryVal) ? cityVal : `${cityVal}, ${countryVal}`;
+      } else {
+        locText = cityVal;
+      }
+    } else if (photo.location || this.currentLocation) {
+      locText = photo.location || this.currentLocation;
+    }
+    city.textContent = locText;
+
+    if (photo.timelineIndex && photo.timelineTotal) {
+      meta.textContent = `타임라인 [${photo.timelineIndex} / ${photo.timelineTotal}] · ${photo.ym || ''}`;
+    } else if (photo.ym) {
+      meta.textContent = photo.ym;
+    } else {
+      meta.textContent = '';
+    }
+
+    container.style.display = 'block';
+    container.classList.remove('fade-out');
+    setTimeout(() => {
+      container.classList.add('visible');
+    }, 20);
+
+    this.renderWorldMapIntroLeaflet(photo.latitude, photo.longitude, photo.countryCode || this.currentCountryCode);
+
+    if (this.worldMapIntroTimer) {
+      clearTimeout(this.worldMapIntroTimer);
+    }
+
+    setTimeout(() => {
+      if (container.classList.contains('visible')) {
+        container.classList.add('fade-out');
+      }
+    }, Math.max(0, duration - 700));
+
+    this.worldMapIntroTimer = setTimeout(() => {
+      container.style.display = 'none';
+      container.classList.remove('visible', 'fade-out');
+      if (onComplete) onComplete();
+    }, duration);
+  },
+
+  stopWorldMapIntro() {
+    if (this.worldMapIntroTimer) {
+      clearTimeout(this.worldMapIntroTimer);
+      this.worldMapIntroTimer = null;
+    }
+    if (this.worldMapIntroContainer) {
+      this.worldMapIntroContainer.style.display = 'none';
+      this.worldMapIntroContainer.classList.remove('visible', 'fade-out');
+    }
+  },
+
+  renderWorldMapIntroLeaflet(lat, lon, countryCode) {
+    if (typeof L === 'undefined' || !this.worldMapIntroCanvas) return;
+
+    const fallbackLat = 20;
+    const fallbackLon = 0;
+    const targetLat = (lat !== null && lat !== undefined) ? lat : fallbackLat;
+    const targetLon = (lon !== null && lon !== undefined) ? lon : fallbackLon;
+
+    if (!this.worldMapIntroMap) {
+      this.worldMapIntroMap = L.map(this.worldMapIntroCanvas, {
+        zoomControl: false,
+        attributionControl: false,
+        fadeAnimation: true,
+        zoomAnimation: true
+      });
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+        subdomains: 'abcd'
+      }).addTo(this.worldMapIntroMap);
+    }
+
+    const self = this;
+    setTimeout(() => {
+      if (!self.worldMapIntroMap) return;
+      self.worldMapIntroMap.invalidateSize();
+      self.worldMapIntroMap.setView([20, targetLon], 2.2);
+
+      setTimeout(() => {
+        if (!self.worldMapIntroMap) return;
+        self.worldMapIntroMap.flyTo([targetLat, targetLon], self.config.worldMapIntroZoom || 4.5, {
+          duration: 3.5,
+          easeLinearity: 0.25
+        });
+      }, 250);
+    }, 50);
+
+    if (this.worldMapIntroMarker) {
+      this.worldMapIntroMap.removeLayer(this.worldMapIntroMarker);
+      this.worldMapIntroMarker = null;
+    }
+
+    if (lat !== null && lon !== null && lat !== undefined && lon !== undefined) {
+      const pulseIcon = L.divIcon({
+        className: 'world-map-intro-pulsing-marker',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+      this.worldMapIntroMarker = L.marker([lat, lon], { icon: pulseIcon }).addTo(this.worldMapIntroMap);
+    }
+
+    if (countryCode) {
+      this.updateWorldMapCountryHighlight(countryCode);
+    }
+  },
+
+  updateWorldMapCountryHighlight(countryCode) {
+    if (!this.worldMapIntroMap || !this.countriesGeoData || !countryCode) return;
+
+    if (this.worldMapCountryHighlightLayer) {
+      this.worldMapIntroMap.removeLayer(this.worldMapCountryHighlightLayer);
+      this.worldMapCountryHighlightLayer = null;
+    }
+
+    const upperCode = countryCode.toUpperCase();
+    const filteredGeoJson = {
+      type: 'FeatureCollection',
+      features: this.countriesGeoData.features.filter(f => {
+        const p = f.properties || {};
+        const iso2 = (p.ISO_A2 || p.iso_a2 || p.wb_a2 || '').toUpperCase();
+        return iso2 === upperCode;
+      })
+    };
+
+    if (filteredGeoJson.features.length > 0) {
+      this.worldMapCountryHighlightLayer = L.geoJSON(filteredGeoJson, {
+        style: {
+          color: '#00d2d3',
+          weight: 3,
+          opacity: 0.9,
+          fillColor: '#00d2d3',
+          fillOpacity: 0.28
+        }
+      }).addTo(this.worldMapIntroMap);
+    }
+  },
+
   displayImage(photo) {
+    const self = this;
+
+    if (photo.city) self.currentCity = photo.city;
+    if (photo.country) self.currentCountry = photo.country;
+    if (photo.countryCode) self.currentCountryCode = (photo.countryCode || '').toLowerCase();
+    if (photo.location) self.currentLocation = photo.location;
+    if (photo.countryBounds) self.currentCountryBounds = photo.countryBounds;
+
+    const isMonthFirstPhoto = (photo.monthIndex === 1);
+    const shouldShowWorldMap = (self.config.showWorldMapIntro !== false && isMonthFirstPhoto && (photo.latitude && photo.longitude));
+
+    if (shouldShowWorldMap) {
+      self.showWorldMapIntro(photo, () => {
+        self.renderImageContent(photo);
+      });
+    } else {
+      self.renderImageContent(photo);
+    }
+  },
+
+  renderImageContent(photo) {
     const self = this;
     const image = new Image();
 
     image.onload = function () {
       self.currentPhoto = photo;
-      self.currentLocation = '';
-      self.currentCity = '';
-      self.currentCountry = '';
-      self.currentCountryCode = '';
-      self.currentCountryBounds = null;
+      if (photo.location) self.currentLocation = photo.location;
+      if (photo.city) self.currentCity = photo.city;
+      if (photo.country) self.currentCountry = photo.country;
+      if (photo.countryCode) self.currentCountryCode = (photo.countryCode || '').toLowerCase();
+      if (photo.countryBounds) self.currentCountryBounds = photo.countryBounds;
 
       // Create transition container
       const transitionDiv = document.createElement('div');

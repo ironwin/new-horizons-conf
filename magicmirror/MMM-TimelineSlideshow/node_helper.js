@@ -367,8 +367,25 @@ module.exports = NodeHelper.create({
         yearsAgo: yearsAgo
       };
 
-      self.sendSocketNotification('TIMELINESLIDESHOW_FILE', returnPayload);
-      self.startOrRestartTimer();
+      const deliverImage = (locInfo) => {
+        if (locInfo) {
+          returnPayload.location = locInfo.location;
+          returnPayload.city = locInfo.city;
+          returnPayload.country = locInfo.country;
+          returnPayload.countryCode = locInfo.countryCode;
+          returnPayload.countryBounds = locInfo.countryBounds;
+        }
+        self.sendSocketNotification('TIMELINESLIDESHOW_FILE', returnPayload);
+        self.startOrRestartTimer(currentItem);
+      };
+
+      if (currentItem.latitude && currentItem.longitude) {
+        self.lookupLocation(currentItem.latitude, currentItem.longitude, currentItem.album)
+          .then(locInfo => deliverImage(locInfo))
+          .catch(() => deliverImage(null));
+      } else {
+        deliverImage(null);
+      }
     });
   },
 
@@ -433,9 +450,13 @@ module.exports = NodeHelper.create({
     }
   },
 
-  startOrRestartTimer() {
+  startOrRestartTimer(currentItem) {
     this.stopTimer();
-    const speed = this.config?.slideshowSpeed || 10000;
+    const baseSpeed = this.config?.slideshowSpeed || 10000;
+    const introDuration = (this.config?.showWorldMapIntro !== false && currentItem?.monthIndex === 1)
+      ? (this.config?.worldMapIntroDuration || 10000)
+      : 0;
+    const speed = baseSpeed + introDuration;
     this.timer = setTimeout(() => {
       this.getNextImage();
     }, speed);
