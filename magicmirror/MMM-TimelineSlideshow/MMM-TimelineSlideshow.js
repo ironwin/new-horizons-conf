@@ -437,6 +437,7 @@ Module.register('MMM-TimelineSlideshow', {
 
     date.textContent = dateText;
 
+    // Only show city/location from EXIF, never folder/album name!
     let locText = '';
     if (this.currentCity) {
       locText = (this.currentCountry && this.currentCountry !== '대한민국' && this.currentCountry !== 'South Korea')
@@ -444,8 +445,6 @@ Module.register('MMM-TimelineSlideshow', {
         : this.currentCity;
     } else if (this.currentLocation) {
       locText = this.currentLocation;
-    } else if (photo.album) {
-      locText = photo.album;
     }
 
     if (locText) {
@@ -529,7 +528,7 @@ Module.register('MMM-TimelineSlideshow', {
           self.updatePortraitInfoContent();
           self.initPortraitInfoSizing(rawWidth, rawHeight);
         }
-        if (self.config.showPortraitMap && (photo.latitude || photo.album)) {
+        if (self.config.showPortraitMap && (photo.latitude && photo.longitude)) {
           self.initOrUpdatePortraitMap(photo.latitude, photo.longitude, photo.album, rawWidth, rawHeight);
         } else {
           self.hidePortraitMap();
@@ -551,7 +550,7 @@ Module.register('MMM-TimelineSlideshow', {
         }
       }
 
-      // Reverse geocoding request if GPS or album available
+      // Reverse geocoding request only if GPS available in EXIF
       if (photo.latitude && photo.longitude) {
         self.sendSocketNotification('TIMELINESLIDESHOW_GET_LOCATION', {
           identifier: self.identifier,
@@ -561,15 +560,6 @@ Module.register('MMM-TimelineSlideshow', {
           album: photo.album,
           language: self.config.locationLanguage || 'ko'
         });
-      } else if (photo.album) {
-        self.currentLocation = photo.album;
-        self.currentCity = photo.album;
-        if (self.config.showImageInfo && (!isPortrait || !self.config.hideImageInfoForPortrait)) {
-          self.updateImageInfo();
-        }
-        if (self.config.showPortraitInfo && self.portraitInfoContainer && self.portraitInfoContainer.classList.contains('visible')) {
-          self.updatePortraitInfoContent();
-        }
       }
 
       // Center Month Intro Title (First photo of each month)
@@ -650,9 +640,6 @@ Module.register('MMM-TimelineSlideshow', {
     } else if (this.currentLocation) {
       elements.city.textContent = this.currentLocation;
       elements.country.textContent = '';
-    } else if (photo.album) {
-      elements.city.textContent = photo.album;
-      elements.country.textContent = '';
     } else {
       elements.city.textContent = '';
       elements.country.textContent = '';
@@ -699,7 +686,7 @@ Module.register('MMM-TimelineSlideshow', {
     }
 
     if (fields.includes('location')) {
-      const loc = this.currentLocation || this.currentCity || photo.album || '';
+      const loc = this.currentLocation || this.currentCity || '';
       if (loc) {
         html += `<div class="info-location">📍 ${loc}</div>`;
       }
