@@ -1,0 +1,14 @@
+{
+  "name": "mmm-timelineslideshow",
+  "version": "1.0.0",
+  "description": "MagicMirror² module that groups photos by year-month and randomly displays 5 photos per month in chronological timeline order (from past to present).",
+  "main": "MMM-TimelineSlideshow.js",
+  "author": "ironwin",
+  "license": "MIT",
+  "dependencies": {
+    "exif-js": "^2.3.0",
+    "leaflet": "^1.9.4",
+    "mysql2": "^3.12.0",
+    "sharp": "^0.33.5"
+  }
+}
