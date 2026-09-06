@@ -438,8 +438,10 @@ Module.register('MMM-TimelineSlideshow', {
     date.textContent = dateText;
 
     let locText = '';
-    if (this.currentCity && this.currentCountry) {
-      locText = `${this.currentCity}, ${this.currentCountry}`;
+    if (this.currentCity) {
+      locText = (this.currentCountry && this.currentCountry !== '대한민국' && this.currentCountry !== 'South Korea')
+        ? `${this.currentCity}, ${this.currentCountry}`
+        : this.currentCity;
     } else if (this.currentLocation) {
       locText = this.currentLocation;
     } else if (photo.album) {
@@ -447,8 +449,8 @@ Module.register('MMM-TimelineSlideshow', {
     }
 
     if (locText) {
-      location.innerHTML = `📍 ${locText}`;
-      location.style.display = 'flex';
+      location.textContent = locText;
+      location.style.display = 'block';
     } else {
       location.textContent = '';
       location.style.display = 'none';

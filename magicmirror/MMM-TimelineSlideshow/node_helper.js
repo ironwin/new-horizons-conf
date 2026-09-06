@@ -139,6 +139,7 @@ module.exports = NodeHelper.create({
     const candidateLimit = photosPerMonth + 3;
 
     let yearFilterSql = '';
+    let excludeFilterSql = '';
     const queryParams = [];
 
     if (config.minYear && Number.isInteger(Number(config.minYear))) {
@@ -148,6 +149,16 @@ module.exports = NodeHelper.create({
     if (config.maxYear && Number.isInteger(Number(config.maxYear))) {
       yearFilterSql += ' AND YEAR(taken_at) <= ?';
       queryParams.push(Number(config.maxYear));
+    }
+
+    const excludeAlbums = config.excludeAlbums || ['wedding', '웨딩', '결혼'];
+    if (Array.isArray(excludeAlbums) && excludeAlbums.length > 0) {
+      const conditions = [];
+      for (const kw of excludeAlbums) {
+        conditions.push('(album NOT LIKE ? AND filepath NOT LIKE ?)');
+        queryParams.push(`%${kw}%`, `%${kw}%`);
+      }
+      excludeFilterSql = ' AND ' + conditions.join(' AND ');
     }
 
     queryParams.push(candidateLimit);
@@ -163,7 +174,7 @@ module.exports = NodeHelper.create({
                width, height, orientation, is_portrait, has_gps, latitude, longitude, altitude,
                ROW_NUMBER() OVER (PARTITION BY DATE_FORMAT(taken_at, '%Y-%m') ORDER BY RAND()) as rn
         FROM photos
-        WHERE taken_at IS NOT NULL ${yearFilterSql}
+        WHERE taken_at IS NOT NULL ${yearFilterSql} ${excludeFilterSql}
       ) sub
       WHERE rn <= ?
       ORDER BY ym ${sortOrder}, taken_at ASC
@@ -175,7 +186,7 @@ module.exports = NodeHelper.create({
       const [rows] = await this.pool.query(sql, queryParams);
       Log.info(`[MMM-TimelineSlideshow] DB returned ${rows.length} candidate rows in ${Date.now() - startTime}ms.`);
 
-      // Group by ym and filter files existing on disk
+      // Group by ym and filter files existing on disk and not in excluded albums
       const monthMap = new Map();
       for (const r of rows) {
         if (!monthMap.has(r.ym)) {
@@ -184,12 +195,18 @@ module.exports = NodeHelper.create({
         const list = monthMap.get(r.ym);
         if (list.length < photosPerMonth) {
           try {
-            if (fs.existsSync(r.filepath)) {
-              list.push(r);
-            }
+            if (!fs.existsSync(r.filepath)) continue;
           } catch {
-            // Ignore unreadable file
+            continue;
           }
+
+          const isExcluded = excludeAlbums.some(kw =>
+            (r.album && r.album.toLowerCase().includes(kw.toLowerCase())) ||
+            (r.filepath && r.filepath.toLowerCase().includes(kw.toLowerCase()))
+          );
+          if (isExcluded) continue;
+
+          list.push(r);
         }
       }
 
