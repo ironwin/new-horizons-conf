@@ -35,6 +35,10 @@ Module.register('MMM-TimelineSlideshow', {
     showOverallProgress: true, // 전체 진행도 [45 / 342] 표시 여부
     showYearsAgoBadge: true,   // 몇 년 전인지 표시 여부 (예: '12년 전')
 
+    // 각 월의 첫 번째 사진 가운데 큰 흰색 글씨 표시 설정
+    showMonthCenterTitle: true,
+    monthCenterDateFormat: 'YYYY년 M월 D일',
+
     // 5. Portrait auto-fitting (contain to avoid clipping faces)
     autoFitPortrait: true,
     backgroundSizePortrait: 'contain',
@@ -111,6 +115,8 @@ Module.register('MMM-TimelineSlideshow', {
     this.portraitInfoContainer = null;
     this.imageInfoDiv = null;
     this.emptyNoticeDiv = null;
+    this.centerTitleContainer = null;
+    this.centerTitleElements = null;
 
     if (this.config.showPortraitMap && this.config.portraitMapHighlightCountry) {
       this.loadCountriesGeoJson();
@@ -202,6 +208,10 @@ Module.register('MMM-TimelineSlideshow', {
           this.updateImageInfo();
         }
 
+        if (this.config.showMonthCenterTitle && this.currentPhoto && this.currentPhoto.monthIndex === 1) {
+          this.updateCenterTitle(this.currentPhoto);
+        }
+
         if (this.config.showPortraitInfo && this.portraitInfoContainer && this.portraitInfoContainer.classList.contains('visible')) {
           this.updatePortraitInfoContent();
         }
@@ -246,6 +256,10 @@ Module.register('MMM-TimelineSlideshow', {
       this.imageInfoDiv = this.createImageInfoDiv(wrapper);
     }
 
+    if (this.config.showMonthCenterTitle) {
+      this.centerTitleContainer = this.createCenterTitleDiv(wrapper);
+    }
+
     this.emptyNoticeDiv = document.createElement('div');
     this.emptyNoticeDiv.className = 'empty-notice';
     this.emptyNoticeDiv.style.display = 'none';
@@ -271,6 +285,9 @@ Module.register('MMM-TimelineSlideshow', {
     }
     if (this.imageInfoDiv) {
       this.imageInfoDiv.style.display = 'none';
+    }
+    if (this.centerTitleContainer) {
+      this.centerTitleContainer.style.display = 'none';
     }
   },
 
@@ -369,6 +386,75 @@ Module.register('MMM-TimelineSlideshow', {
     };
 
     return container;
+  },
+
+  createCenterTitleDiv(wrapper) {
+    const container = document.createElement('div');
+    container.className = 'month-center-title';
+    container.style.display = 'none';
+
+    const dateEl = document.createElement('div');
+    dateEl.className = 'month-center-date';
+    container.appendChild(dateEl);
+
+    const locEl = document.createElement('div');
+    locEl.className = 'month-center-location';
+    container.appendChild(locEl);
+
+    wrapper.appendChild(container);
+
+    this.centerTitleElements = {
+      container: container,
+      date: dateEl,
+      location: locEl
+    };
+
+    return container;
+  },
+
+  updateCenterTitle(photo) {
+    if (!this.centerTitleElements) return;
+    const { container, date, location } = this.centerTitleElements;
+
+    if (!photo || photo.monthIndex !== 1) {
+      container.style.display = 'none';
+      return;
+    }
+
+    let dateText = '';
+    if (photo.taken_at) {
+      const m = moment(photo.taken_at);
+      if (m.isValid()) {
+        dateText = m.format(this.config.monthCenterDateFormat || 'YYYY년 M월 D일');
+      }
+    }
+    if (!dateText && photo.date_str) {
+      dateText = photo.date_str;
+    }
+    if (!dateText && photo.ym) {
+      dateText = photo.ym;
+    }
+
+    date.textContent = dateText;
+
+    let locText = '';
+    if (this.currentCity && this.currentCountry) {
+      locText = `${this.currentCity}, ${this.currentCountry}`;
+    } else if (this.currentLocation) {
+      locText = this.currentLocation;
+    } else if (photo.album) {
+      locText = photo.album;
+    }
+
+    if (locText) {
+      location.innerHTML = `📍 ${locText}`;
+      location.style.display = 'flex';
+    } else {
+      location.textContent = '';
+      location.style.display = 'none';
+    }
+
+    container.style.display = 'flex';
   },
 
   displayImage(photo) {
@@ -482,6 +568,11 @@ Module.register('MMM-TimelineSlideshow', {
         if (self.config.showPortraitInfo && self.portraitInfoContainer && self.portraitInfoContainer.classList.contains('visible')) {
           self.updatePortraitInfoContent();
         }
+      }
+
+      // Center Month Intro Title (First photo of each month)
+      if (self.config.showMonthCenterTitle) {
+        self.updateCenterTitle(photo);
       }
     };
 
