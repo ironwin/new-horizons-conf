@@ -77,7 +77,7 @@ let config = {
 				// 7. 세로 사진 왼쪽 여백 지도 표시 설정
 				showPortraitMap: true,
 				portraitMapPosition: "leftCenter",
-				portraitMapTileTheme: "light",
+				portraitMapTileTheme: "light_nolabels",
 				portraitMapApiKey: "cb1_2sbq_1_5ce7e2903fefa17bc3ed219d",
 				portraitMapZoom: 6,
 				portraitMapFitCountry: true,
@@ -101,7 +101,7 @@ let config = {
 				// 10. 매일 첫 사진 전 세계지도 인트로 설정
 				showWorldMapIntro: true,
 				worldMapIntroDuration: 10000,
-				worldMapIntroTileTheme: "light",
+				worldMapIntroTileTheme: "light_nolabels",
 				worldMapIntroHighlightColor: "#ff4757",
 
 				// 11. 기타 슬라이드쇼 옵션
