@@ -1000,7 +1000,7 @@ Module.register('MMM-TimelineSlideshow', {
       '오스트리아': 'at', 'austria': 'at',
       '체코': 'cz', 'czech republic': 'cz',
       '괌': 'gu', 'guam': 'gu',
-      '하와이': 'us'
+      '하와이': 'hi', 'hawaii': 'hi'
     };
 
     let mappedCode = '';
@@ -1024,9 +1024,10 @@ Module.register('MMM-TimelineSlideshow', {
       const c = (p.code || p.ISO_A2 || p.iso_a2 || '').toLowerCase();
       const c3 = (p.code3 || '').toLowerCase();
       const n = (p.name || '').toLowerCase();
+      const nkr = (p.name_kr || '').toLowerCase();
 
       if (targetCode && (c === targetCode || c3 === targetCode)) return true;
-      if (name && (n === name || n.includes(name))) return true;
+      if (name && (n === name || n.includes(name) || nkr === name || nkr.includes(name))) return true;
       return false;
     });
   },

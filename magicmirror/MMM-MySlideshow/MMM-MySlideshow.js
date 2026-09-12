@@ -714,7 +714,7 @@ Module.register('MMM-MySlideshow', {
       });
   },
 
-  updateCountryHighlight (countryCode) {
+  updateCountryHighlight (countryCode, countryName) {
     if (!this.leafletMap) return;
 
     if (this.countryHighlightLayer) {
@@ -722,14 +722,67 @@ Module.register('MMM-MySlideshow', {
       this.countryHighlightLayer = null;
     }
 
-    if (!this.config.portraitMapHighlightCountry || !countryCode || !this.countriesGeoData) {
+    if (!this.config.portraitMapHighlightCountry || !this.countriesGeoData) {
       return;
     }
 
-    const code = countryCode.toLowerCase();
+    const code = (countryCode || this.currentCountryCode || '').trim().toLowerCase();
+    const name = (countryName || this.currentCountry || '').trim().toLowerCase();
+    if (!code && !name) return;
+
+    const KOREAN_COUNTRY_MAP = {
+      '베트남': 'vn', 'vietnam': 'vn',
+      '일본': 'jp', 'japan': 'jp',
+      '호주': 'au', 'australia': 'au',
+      '스위스': 'ch', 'switzerland': 'ch',
+      '스페인': 'es', 'spain': 'es',
+      '태국': 'th', 'thailand': 'th',
+      '중국': 'cn', 'china': 'cn',
+      '미국': 'us', 'united states': 'us', 'usa': 'us',
+      '프랑스': 'fr', 'france': 'fr',
+      '이탈리아': 'it', 'italy': 'it',
+      '독일': 'de', 'germany': 'de',
+      '영국': 'gb', 'united kingdom': 'gb',
+      '몰디브': 'mv', 'maldives': 'mv',
+      '필리핀': 'ph', 'philippines': 'ph',
+      '인도네시아': 'id', 'indonesia': 'id',
+      '싱가포르': 'sg', 'singapore': 'sg',
+      '말레이시아': 'my', 'malaysia': 'my',
+      '대만': 'tw', 'taiwan': 'tw',
+      '홍콩': 'hk', 'hong kong': 'hk',
+      '마카오': 'mo', 'macau': 'mo',
+      '러시아': 'ru', 'russia': 'ru',
+      '캐나다': 'ca', 'canada': 'ca',
+      '포르투갈': 'pt', 'portugal': 'pt',
+      '터키': 'tr', '튀르키예': 'tr', 'turkey': 'tr',
+      '그리스': 'gr', 'greece': 'gr',
+      '오스트리아': 'at', 'austria': 'at',
+      '체코': 'cz', 'czech republic': 'cz',
+      '괌': 'gu', 'guam': 'gu',
+      '하와이': 'hi', 'hawaii': 'hi'
+    };
+
+    let targetCode = code;
+    if (code && KOREAN_COUNTRY_MAP[code]) {
+      targetCode = KOREAN_COUNTRY_MAP[code];
+    } else if (name && KOREAN_COUNTRY_MAP[name]) {
+      targetCode = KOREAN_COUNTRY_MAP[name];
+    } else if (name) {
+      for (const [k, v] of Object.entries(KOREAN_COUNTRY_MAP)) {
+        if (name.includes(k) || k.includes(name)) {
+          targetCode = v;
+          break;
+        }
+      }
+    }
+
     const feature = this.countriesGeoData.features.find((f) => {
       const p = f.properties || {};
-      return p.code === code || p.code3 === code || p.name && p.name.toLowerCase() === code;
+      const c = (p.code || p.ISO_A2 || p.iso_a2 || '').toLowerCase();
+      const c3 = (p.code3 || '').toLowerCase();
+      const n = (p.name || '').toLowerCase();
+      const nkr = (p.name_kr || '').toLowerCase();
+      return (targetCode && (c === targetCode || c3 === targetCode)) || (name && (n === name || n.includes(name) || nkr === name || nkr.includes(name)));
     });
 
     if (!feature) {

@@ -37,6 +37,9 @@ const COUNTRY_BOUNDS_MAP = {
   fr: [[41.3, -5.2], [51.1, 9.6]],
   gb: [[49.9, -8.6], [58.7, 1.8]],
   gr: [[34.8, 19.3], [41.8, 28.3]],
+  gu: [[13.23, 144.62], [13.66, 144.96]],
+  hi: [[18.91, -159.81], [22.24, -154.80]],
+  'us-hi': [[18.91, -159.81], [22.24, -154.80]],
   hr: [[42.3, 13.4], [46.6, 19.5]],
   hu: [[45.7, 16.1], [48.6, 22.9]],
   id: [[-11.0, 95.0], [6.0, 141.0]],
@@ -66,9 +69,9 @@ const COUNTRY_BOUNDS_MAP = {
 };
 
 const ALBUM_JOURNEY_MAP = {
-  '10.hawaii': { ym: '2010.04', ymKr: '2010년 4월', country: '미국', code: 'us', label: '하와이', lat: 21.307, lon: -157.858 },
+  '10.hawaii': { ym: '2010.04', ymKr: '2010년 4월', country: '하와이', code: 'hi', label: '하와이', lat: 21.307, lon: -157.858 },
   '11.thailand': { ym: '2011.03', ymKr: '2011년 3월', country: '태국', code: 'th', label: '태국', lat: 13.756, lon: 100.502 },
-  '11.guam': { ym: '2011.09', ymKr: '2011년 9월', country: '미국(괌)', code: 'gu', label: '괌', lat: 13.513, lon: 144.805 },
+  '11.guam': { ym: '2011.09', ymKr: '2011년 9월', country: '괌', code: 'gu', label: '괌', lat: 13.513, lon: 144.805 },
   '12.okinawa': { ym: '2012.03', ymKr: '2012년 3월', country: '일본', code: 'jp', label: '오키나와', lat: 26.212, lon: 127.681 },
   '12.hokkaido': { ym: '2012.12', ymKr: '2012년 12월', country: '일본', code: 'jp', label: '홋카이도', lat: 42.964, lon: 141.288 },
   '13.singapole': { ym: '2013.02', ymKr: '2013년 2월', country: '싱가포르', code: 'sg', label: '싱가포르', lat: 1.333, lon: 103.831 },
@@ -801,14 +804,32 @@ module.exports = NodeHelper.create({
 
       const data = await res.json();
       const addr = data.address || {};
-      const country = addr.country || '';
-      const countryCode = (addr.country_code || '').toLowerCase();
+      let country = addr.country || '';
+      let countryCode = (addr.country_code || '').toLowerCase();
       let city = addr.city || addr.town || addr.municipality || addr.county || addr.province || addr.state || '';
 
       const displayName = data.display_name || '';
+
+      // Check for Guam or Hawaii
+      const isGuamCoords = (lat >= 13.1 && lat <= 13.8 && lon >= 144.5 && lon <= 145.1);
+      const isGuam = isGuamCoords || (addr.state === 'Guam' || countryCode === 'gu' || addr['ISO3166-2-lvl4'] === 'US-GU' || displayName.includes('Guam') || displayName.includes('괌'));
+
+      const isHawaiiCoords = (lat >= 18.8 && lat <= 22.5 && lon >= -160.5 && lon <= -154.5);
+      const isHawaii = isHawaiiCoords || (addr.state === '하와이' || addr.state === 'Hawaii' || addr['ISO3166-2-lvl4'] === 'US-HI' || displayName.includes('하와이') || displayName.includes('Hawaii') || displayName.includes('호놀룰루'));
+
       // Clean up known tourist destinations where OSM hierarchy differs
-      if (addr.state === 'Guam' || countryCode === 'gu') {
+      if (isGuam) {
+        countryCode = 'gu';
+        country = (language === 'ko') ? '괌' : 'Guam';
         city = '괌';
+      } else if (isHawaii) {
+        countryCode = 'hi';
+        country = (language === 'ko') ? '하와이' : 'Hawaii';
+        if (!city || city === '미국' || city === 'United States') {
+          city = (language === 'ko') ? '호놀룰루' : 'Honolulu';
+        } else if (displayName.includes('호놀룰루')) {
+          city = '호놀룰루';
+        }
       } else if (displayName.includes('산토리니') || displayName.includes('티라') || (addr.city && addr.city.includes('Θήρας'))) {
         city = '산토리니';
       } else if (displayName.includes('코사무이') || (addr.city && addr.city.includes('เกาะสมุย'))) {
@@ -821,11 +842,15 @@ module.exports = NodeHelper.create({
         city = '도쿄';
       } else if (displayName.includes('말라가') || addr.state_district === '말라가') {
         city = '말라가';
-      } else if (displayName.includes('호놀룰루') || displayName.includes('하와이')) {
-        city = '하와이(호놀룰루)';
       }
 
-      const formatted = this.formatLocationAddress(data);
+      let formatted = this.formatLocationAddress(data);
+      if (isGuam) {
+        formatted = (language === 'ko') ? '괌' : 'Guam';
+      } else if (isHawaii) {
+        const localPart = [addr.suburb, city].filter(Boolean)[0] || city;
+        formatted = `${localPart}, ${country}`;
+      }
       const countryBounds = this.resolveCountryBounds(countryCode, data.boundingbox);
 
       const result = {

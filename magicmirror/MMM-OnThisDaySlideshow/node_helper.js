@@ -36,6 +36,9 @@ const COUNTRY_BOUNDS_MAP = {
   fr: [[41.3, -5.2], [51.1, 9.6]],
   gb: [[49.9, -8.6], [58.7, 1.8]],
   gr: [[34.8, 19.3], [41.8, 28.3]],
+  gu: [[13.23, 144.62], [13.66, 144.96]],
+  hi: [[18.91, -159.81], [22.24, -154.80]],
+  'us-hi': [[18.91, -159.81], [22.24, -154.80]],
   hr: [[42.3, 13.4], [46.6, 19.5]],
   hu: [[45.7, 16.1], [48.6, 22.9]],
   id: [[-11.0, 95.0], [6.0, 141.0]],
@@ -709,9 +712,33 @@ module.exports = NodeHelper.create({
 
       const data = await response.json();
       if (data && data.address) {
-        const formatted = this.formatLocationAddress(data);
-        const { city, country } = this.extractCityAndCountry(data, language);
-        const countryCode = (data.address.country_code || '').toLowerCase();
+        let formatted = this.formatLocationAddress(data);
+        let { city, country } = this.extractCityAndCountry(data, language);
+        let countryCode = (data.address.country_code || '').toLowerCase();
+
+        const addr = data.address;
+        const displayName = data.display_name || '';
+        const isGuamCoords = (lat >= 13.1 && lat <= 13.8 && lon >= 144.5 && lon <= 145.1);
+        const isGuam = isGuamCoords || (addr.state === 'Guam' || countryCode === 'gu' || addr['ISO3166-2-lvl4'] === 'US-GU' || displayName.includes('Guam') || displayName.includes('괌'));
+
+        const isHawaiiCoords = (lat >= 18.8 && lat <= 22.5 && lon >= -160.5 && lon <= -154.5);
+        const isHawaii = isHawaiiCoords || (addr.state === '하와이' || addr.state === 'Hawaii' || addr['ISO3166-2-lvl4'] === 'US-HI' || displayName.includes('하와이') || displayName.includes('Hawaii') || displayName.includes('호놀룰루'));
+
+        if (isGuam) {
+          countryCode = 'gu';
+          country = (language === 'ko') ? '괌' : 'Guam';
+          city = '괌';
+          formatted = (language === 'ko') ? '괌' : 'Guam';
+        } else if (isHawaii) {
+          countryCode = 'hi';
+          country = (language === 'ko') ? '하와이' : 'Hawaii';
+          if (!city || city === '미국' || city === 'United States') {
+            city = (language === 'ko') ? '호놀룰루' : 'Honolulu';
+          }
+          const localPart = [addr.suburb, city].filter(Boolean)[0] || city;
+          formatted = `${localPart}, ${country}`;
+        }
+
         const countryBounds = this.resolveCountryBounds(countryCode, data.boundingbox);
 
         const result = {
@@ -753,12 +780,36 @@ module.exports = NodeHelper.create({
           const dataList = await response.json();
           if (dataList && dataList.length > 0) {
             const item = dataList[0];
-            const { city, country } = this.extractCityAndCountry(item, language);
-            const countryCode = (item.address?.country_code || '').toLowerCase();
-            const countryBounds = this.resolveCountryBounds(countryCode, item.boundingbox);
-            const formatted = this.formatLocationAddress(item);
+            let { city, country } = this.extractCityAndCountry(item, language);
+            let countryCode = (item.address?.country_code || '').toLowerCase();
+            let formatted = this.formatLocationAddress(item);
             const lat = Number(item.lat);
             const lon = Number(item.lon);
+
+            const addr = item.address || {};
+            const displayName = item.display_name || '';
+            const isGuamCoords = (lat >= 13.1 && lat <= 13.8 && lon >= 144.5 && lon <= 145.1);
+            const isGuam = isGuamCoords || (addr.state === 'Guam' || countryCode === 'gu' || addr['ISO3166-2-lvl4'] === 'US-GU' || displayName.includes('Guam') || displayName.includes('괌') || cleanKeyword.toLowerCase().includes('guam') || cleanKeyword.includes('괌'));
+
+            const isHawaiiCoords = (lat >= 18.8 && lat <= 22.5 && lon >= -160.5 && lon <= -154.5);
+            const isHawaii = isHawaiiCoords || (addr.state === '하와이' || addr.state === 'Hawaii' || addr['ISO3166-2-lvl4'] === 'US-HI' || displayName.includes('하와이') || displayName.includes('Hawaii') || displayName.includes('호놀룰루') || cleanKeyword.toLowerCase().includes('hawaii') || cleanKeyword.includes('하와이'));
+
+            if (isGuam) {
+              countryCode = 'gu';
+              country = (language === 'ko') ? '괌' : 'Guam';
+              city = '괌';
+              formatted = (language === 'ko') ? '괌' : 'Guam';
+            } else if (isHawaii) {
+              countryCode = 'hi';
+              country = (language === 'ko') ? '하와이' : 'Hawaii';
+              if (!city || city === '미국' || city === 'United States') {
+                city = (language === 'ko') ? '호놀룰루' : 'Honolulu';
+              }
+              const localPart = [addr.suburb, city].filter(Boolean)[0] || city;
+              formatted = `${localPart}, ${country}`;
+            }
+
+            const countryBounds = this.resolveCountryBounds(countryCode, item.boundingbox);
             const finalResult = {
               formatted: formatted || `${city}, ${country}`,
               city,
