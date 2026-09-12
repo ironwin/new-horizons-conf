@@ -157,6 +157,13 @@ Module.register('MMM-MySlideshow', {
     portraitShowTime: true,
     // Hide standard small imageInfo panel when a portrait image is displayed
     hideImageInfoForPortrait: true,
+    // Hide standard small imageInfo panel when a landscape image is displayed
+    hideImageInfoForLandscape: true,
+    // 가로사진 중앙상단 헤더 설정 (2초간 표시)
+    showLandscapeHeader: true,
+    landscapeHeaderDuration: 2000,
+    landscapeHeaderTop: '30px',
+    landscapeHeaderDateFormat: 'YYYY년 M월 D일'
   },
 
   // load function
@@ -224,6 +231,10 @@ Module.register('MMM-MySlideshow', {
     this.countriesGeoData = null;
     this.portraitInfoContainer = null;
     this.portraitInfoElements = null;
+    this.landscapeHeaderContainer = null;
+    this.landscapeHeaderElements = null;
+    this.landscapeHeaderTimer = null;
+    this.landscapeHeaderFadeTimer = null;
 
     if (this.config.showPortraitMap && this.config.portraitMapHighlightCountry) {
       this.loadCountriesGeoJson();
@@ -313,8 +324,11 @@ Module.register('MMM-MySlideshow', {
         this.currentCountry = payload.country || '';
         this.currentCountryCode = (payload.countryCode || '').toLowerCase();
         this.currentCountryBounds = payload.countryBounds || null;
-        if (this.config.showImageInfo && (!this.isCurrentPortrait || !this.config.hideImageInfoForPortrait)) {
+        if (this.config.showImageInfo && (!this.isCurrentPortrait || !this.config.hideImageInfoForPortrait) && (this.isCurrentPortrait || !this.config.hideImageInfoForLandscape)) {
           this.updateImageInfo(this.currentImageInfo, this.currentImageDate, this.currentLocation);
+        }
+        if (!this.isCurrentPortrait) {
+          this.updateLandscapeHeader(false);
         }
         if (this.config.showPortraitInfo && this.portraitInfoContainer && this.portraitInfoContainer.classList.contains('visible')) {
           this.updatePortraitInfoContent(
@@ -470,6 +484,10 @@ Module.register('MMM-MySlideshow', {
       this.imageInfoDiv = this.createImageInfoDiv(wrapper);
     }
 
+    if (this.config.showLandscapeHeader !== false) {
+      this.landscapeHeaderContainer = this.createLandscapeHeaderDiv(wrapper);
+    }
+
     if (this.config.showProgressBar) {
       this.createProgressbarDiv(wrapper, this.config.slideshowSpeed);
     }
@@ -485,6 +503,15 @@ Module.register('MMM-MySlideshow', {
     }
 
     return wrapper;
+  },
+
+  suspend () {
+    if (this.landscapeHeaderTimer) clearTimeout(this.landscapeHeaderTimer);
+    if (this.landscapeHeaderFadeTimer) clearTimeout(this.landscapeHeaderFadeTimer);
+    if (this.landscapeHeaderContainer) {
+      this.landscapeHeaderContainer.style.display = 'none';
+      this.landscapeHeaderContainer.classList.remove('fade-out');
+    }
   },
 
   createGradientDiv (direction, gradient, wrapper) {
@@ -516,6 +543,100 @@ Module.register('MMM-MySlideshow', {
     div.className = `info ${this.config.imageInfoLocation}`;
     wrapper.appendChild(div);
     return div;
+  },
+
+  createLandscapeHeaderDiv (wrapper) {
+    const container = document.createElement('div');
+    container.className = 'landscape-top-header';
+    container.style.display = 'none';
+    if (this.config.landscapeHeaderTop) {
+      container.style.top = this.config.landscapeHeaderTop;
+    }
+
+    const dateEl = document.createElement('div');
+    dateEl.className = 'landscape-header-date';
+    container.appendChild(dateEl);
+
+    const locEl = document.createElement('div');
+    locEl.className = 'landscape-header-location';
+    container.appendChild(locEl);
+
+    wrapper.appendChild(container);
+
+    this.landscapeHeaderElements = {
+      container: container,
+      date: dateEl,
+      location: locEl
+    };
+
+    return container;
+  },
+
+  updateLandscapeHeader (resetTimer = true) {
+    if (!this.landscapeHeaderElements || this.config.showLandscapeHeader === false) return;
+    const { container, date, location } = this.landscapeHeaderElements;
+
+    if (this.isCurrentPortrait) {
+      if (this.landscapeHeaderTimer) clearTimeout(this.landscapeHeaderTimer);
+      if (this.landscapeHeaderFadeTimer) clearTimeout(this.landscapeHeaderFadeTimer);
+      container.style.display = 'none';
+      container.classList.remove('fade-out');
+      return;
+    }
+
+    const dateText = this.currentPortraitDateStr || this.currentImageDate || '';
+    date.textContent = dateText;
+
+    let locText = '';
+    const cityVal = this.currentCity || '';
+    const countryVal = this.currentCountry || '';
+    if (cityVal) {
+      if (countryVal && countryVal !== '대한민국' && countryVal !== 'South Korea') {
+        locText = (cityVal === countryVal) ? cityVal : `${cityVal}, ${countryVal}`;
+      } else {
+        locText = cityVal;
+      }
+    } else if (this.currentLocation) {
+      locText = this.currentLocation;
+    }
+
+    if (locText) {
+      location.textContent = locText;
+      location.style.display = 'block';
+    } else {
+      location.textContent = '';
+      location.style.display = 'none';
+    }
+
+    if (!dateText && !locText) {
+      container.style.display = 'none';
+      return;
+    }
+
+    if (!resetTimer) {
+      return;
+    }
+
+    if (this.landscapeHeaderTimer) {
+      clearTimeout(this.landscapeHeaderTimer);
+      this.landscapeHeaderTimer = null;
+    }
+    if (this.landscapeHeaderFadeTimer) {
+      clearTimeout(this.landscapeHeaderFadeTimer);
+      this.landscapeHeaderFadeTimer = null;
+    }
+
+    container.classList.remove('fade-out');
+    container.style.display = 'flex';
+
+    const duration = (this.config.landscapeHeaderDuration || 2000);
+    this.landscapeHeaderTimer = setTimeout(() => {
+      container.classList.add('fade-out');
+      this.landscapeHeaderFadeTimer = setTimeout(() => {
+        container.style.display = 'none';
+        container.classList.remove('fade-out');
+      }, 500);
+    }, duration);
   },
 
   createPortraitMapDiv (wrapper) {
@@ -1195,10 +1316,19 @@ Module.register('MMM-MySlideshow', {
         if (this.config.showImageInfo && this.imageInfoDiv) {
           if (isPortrait && this.config.hideImageInfoForPortrait) {
             this.imageInfoDiv.style.display = 'none';
+          } else if (!isPortrait && this.config.hideImageInfoForLandscape) {
+            this.imageInfoDiv.style.display = 'none';
           } else {
             this.imageInfoDiv.style.display = '';
             this.updateImageInfo(imageinfo, this.currentImageDate, this.currentLocation);
           }
+        }
+
+        // Landscape Top Center Header (2초간 표시)
+        if (!isPortrait) {
+          this.updateLandscapeHeader(true);
+        } else if (this.landscapeHeaderContainer) {
+          this.updateLandscapeHeader(false);
         }
 
         if (!this.browserSupportsExifOrientationNatively) {

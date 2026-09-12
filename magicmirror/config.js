@@ -36,8 +36,8 @@ let config = {
 				},
 
 				// 2. 일별 사진 수 및 정렬
-				groupBy: "day",           // "day": 일별 10장씩 (기본값), "month": 월별 10장씩
-				photosPerDay: 10,         // 일별 랜덤 추출할 사진 수 (기본값: 10)
+				groupBy: "day",           // "day": 일별 30장씩 (기본값), "month": 월별 30장씩
+				photosPerDay: 30,         // 일별 랜덤 추출할 사진 수 (기본값: 30)
 				minPhotosPerDay: 10,      // 일간 사진 수가 10장 미만인 날 제외 (여행 사진이 아닌 날 제외)
 				sortOrder: "asc",         // "asc": 과거 -> 현재 (시간순), "desc": 최신 -> 과거
 				sortWithinMonth: "asc",   // "asc": 해당 일자 내부 시간순, "random": 해당 일자 내부 무작위
@@ -45,7 +45,7 @@ let config = {
 				resumeTimeline: true,     // 재실행 시 이전 마지막 일자의 다음 일자부터 이어서 재생 (항상 첫 일자부터 반복 방지)
 				minYear: null,            // 특정 연도 이후만 보려면 예: 2015, 전체는 null
 				maxYear: null,            // 특정 연도 이전만 보려면 예: 2025, 전체는 null
-				resortOnLoop: true,       // 전체 타임라인 완료 시 새로운 랜덤 10장씩 다시 추출
+				resortOnLoop: true,       // 전체 타임라인 완료 시 새로운 랜덤 30장씩 다시 추출
 
 				// 3. 슬라이드쇼 재생 속도
 				slideshowSpeed: 10000,    // 사진 전환 속도 (밀리초, 10초)
@@ -58,8 +58,9 @@ let config = {
 
 				// 4-1. 일자 및 도시 타이틀 표시 설정
 				showMonthCenterTitle: true,     // 매일 첫 번째 사진 가운데 큰 흰색 글씨 표시 (전체 크기)
-				showLandscapeDailyHeader: true, // 매일 2번째 사진 이후 모든 가로사진 가운데 상단에 절반 크기 흰색 글씨 표시
+				showLandscapeDailyHeader: true, // 모든 가로사진 가운데 상단에 절반 크기 흰색 글씨 표시
 				landscapeDailyHeaderTop: "30px", // 가운데 상단 위치 (기본: 30px)
+				landscapeHeaderDuration: 2000,   // 가로사진 중앙상단 일자/위치 2초간 표시
 
 				// 5. 세로 사진 잘림 방지 (얼굴 확대 방지)
 				autoFitPortrait: true,
@@ -77,7 +78,7 @@ let config = {
 				// 7. 세로 사진 왼쪽 여백 지도 표시 설정
 				showPortraitMap: true,
 				portraitMapPosition: "leftCenter",
-				portraitMapTileTheme: "light",
+				portraitMapTileTheme: "light_nolabels",
 				portraitMapApiKey: "cb1_2sbq_1_5ce7e2903fefa17bc3ed219d",
 				portraitMapZoom: 6,
 				portraitMapFitCountry: true,
@@ -101,7 +102,7 @@ let config = {
 				// 10. 매일 첫 사진 전 세계지도 인트로 설정
 				showWorldMapIntro: true,
 				worldMapIntroDuration: 10000,
-				worldMapIntroTileTheme: "light",
+				worldMapIntroTileTheme: "light_nolabels",
 				worldMapIntroHighlightColor: "#ff4757",
 
 				// 11. 기타 슬라이드쇼 옵션

@@ -483,3 +483,74 @@
   font-size: 20px;
   color: #bbb;
 }
+
+/* ==========================================================================
+   Landscape Top Center Header (2초간 중앙상단 표시)
+   ========================================================================== */
+.MMM-OnThisDaySlideshow .landscape-top-header {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 75%;
+  padding: 14px 34px;
+  background: rgba(0, 0, 0, 0.40);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  animation: topCenterFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.MMM-OnThisDaySlideshow .landscape-top-header.fade-out {
+  animation: topCenterFadeOut 0.5s ease-out forwards;
+}
+
+@keyframes topCenterFadeIn {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes topCenterFadeOut {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
+}
+
+.MMM-OnThisDaySlideshow .landscape-top-header .landscape-header-date,
+.MMM-OnThisDaySlideshow .landscape-top-header .landscape-header-location {
+  font-family: 'Roboto Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: clamp(2.25rem, 3.1vw, 3.25rem);
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.95), 0 2px 8px rgba(0, 0, 0, 0.9);
+  text-align: center;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.MMM-OnThisDaySlideshow .landscape-top-header .landscape-header-location {
+  margin-top: 6px;
+}

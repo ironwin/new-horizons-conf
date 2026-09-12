@@ -47,9 +47,14 @@ Module.register('MMM-TimelineSlideshow', {
     showMonthCenterTitle: true,
     monthCenterDateFormat: 'YYYY년 M월 D일',
 
-    // 매일 2번째 사진 이후 모든 가로사진 가운데 상단 헤더 설정 (첫번째 사진 크기의 절반)
+    // 가로사진 중앙상단 일자/위치 헤더 설정 (2초간 표시)
+    showLandscapeHeader: true,
     showLandscapeDailyHeader: true,
+    landscapeHeaderDuration: 2000,
+    landscapeDailyHeaderDuration: 2000,
     landscapeDailyHeaderTop: '30px',
+    landscapeHeaderTop: '30px',
+    landscapeHeaderDateFormat: 'YYYY년 M월 D일',
 
     // 5. Portrait auto-fitting (contain to avoid clipping faces)
     autoFitPortrait: true,
@@ -142,6 +147,8 @@ Module.register('MMM-TimelineSlideshow', {
     this.emptyNoticeDiv = null;
     this.centerTitleContainer = null;
     this.centerTitleElements = null;
+    this.centerTitleTimer = null;
+    this.centerTitleFadeTimer = null;
 
     // Startup World Map Overview elements
     this.startupWorldMapContainer = null;
@@ -294,7 +301,7 @@ Module.register('MMM-TimelineSlideshow', {
         }
 
         if (this.currentPhoto) {
-          this.updateCenterTitle(this.currentPhoto);
+          this.updateCenterTitle(this.currentPhoto, false);
         }
 
         if (this.config.showPortraitInfo && this.portraitInfoContainer && this.portraitInfoContainer.classList.contains('visible')) {
@@ -616,24 +623,31 @@ Module.register('MMM-TimelineSlideshow', {
     return container;
   },
 
-  updateCenterTitle(photo) {
+  updateCenterTitle(photo, resetTimer = true) {
     if (!this.centerTitleElements) return;
     const { container, date, location } = this.centerTitleElements;
 
     if (!photo) {
+      if (this.centerTitleTimer) clearTimeout(this.centerTitleTimer);
+      if (this.centerTitleFadeTimer) clearTimeout(this.centerTitleFadeTimer);
       container.style.display = 'none';
+      container.classList.remove('fade-out');
       return;
     }
 
     const isFirstPhoto = (photo.monthIndex === 1 || photo.periodIndex === 1);
-    const isSecondOrLater = (photo.monthIndex >= 2 || photo.periodIndex >= 2);
     const isLandscape = !this.isCurrentPortrait;
 
-    const showFirstIntro = isFirstPhoto && (this.config.showMonthCenterTitle !== false);
-    const showLandscapeHeader = isSecondOrLater && isLandscape && (this.config.showLandscapeDailyHeader !== false);
+    // 가로 사진일 때 중앙상단 헤더 표시
+    const showLandscapeHeader = isLandscape && (this.config.showLandscapeHeader !== false) && (this.config.showLandscapeDailyHeader !== false);
+    // 세로 사진이고 첫 사진일 때만 화면 중앙 타이틀 허용
+    const showFirstIntro = !isLandscape && isFirstPhoto && (this.config.showMonthCenterTitle !== false);
 
     if (!showFirstIntro && !showLandscapeHeader) {
+      if (this.centerTitleTimer) clearTimeout(this.centerTitleTimer);
+      if (this.centerTitleFadeTimer) clearTimeout(this.centerTitleFadeTimer);
       container.style.display = 'none';
+      container.classList.remove('fade-out');
       return;
     }
 
@@ -642,8 +656,8 @@ Module.register('MMM-TimelineSlideshow', {
       container.style.top = '';
     } else if (showLandscapeHeader) {
       container.className = 'month-center-title position-top-center';
-      if (this.config.landscapeDailyHeaderTop) {
-        container.style.top = this.config.landscapeDailyHeaderTop;
+      if (this.config.landscapeDailyHeaderTop || this.config.landscapeHeaderTop) {
+        container.style.top = this.config.landscapeDailyHeaderTop || this.config.landscapeHeaderTop;
       } else {
         container.style.top = '';
       }
@@ -653,7 +667,7 @@ Module.register('MMM-TimelineSlideshow', {
     if (photo.taken_at) {
       const m = moment(photo.taken_at);
       if (m.isValid()) {
-        dateText = m.format(this.config.monthCenterDateFormat || 'YYYY년 M월 D일');
+        dateText = m.format(this.config.landscapeHeaderDateFormat || this.config.monthCenterDateFormat || 'YYYY년 M월 D일');
       }
     }
     if (!dateText && photo.date_str) {
@@ -691,7 +705,40 @@ Module.register('MMM-TimelineSlideshow', {
       location.style.display = 'none';
     }
 
+    if (!dateText && !locText) {
+      container.style.display = 'none';
+      return;
+    }
+
+    if (!resetTimer) {
+      // Just update text without restarting timer if already running or finished
+      return;
+    }
+
+    if (this.centerTitleTimer) {
+      clearTimeout(this.centerTitleTimer);
+      this.centerTitleTimer = null;
+    }
+    if (this.centerTitleFadeTimer) {
+      clearTimeout(this.centerTitleFadeTimer);
+      this.centerTitleFadeTimer = null;
+    }
+
+    container.classList.remove('fade-out');
     container.style.display = 'flex';
+
+    // 가로사진일 때 2초간 표시 후 부드럽게 페이드아웃
+    const duration = isLandscape
+      ? (this.config.landscapeHeaderDuration || this.config.landscapeDailyHeaderDuration || 2000)
+      : (this.config.monthCenterTitleDuration || 3000);
+
+    this.centerTitleTimer = setTimeout(() => {
+      container.classList.add('fade-out');
+      this.centerTitleFadeTimer = setTimeout(() => {
+        container.style.display = 'none';
+        container.classList.remove('fade-out');
+      }, 500);
+    }, duration);
   },
 
   showWorldMapIntro(photo, onComplete) {
@@ -787,6 +834,14 @@ Module.register('MMM-TimelineSlideshow', {
     if (this.worldMapIntroContainer) {
       this.worldMapIntroContainer.style.display = 'none';
       this.worldMapIntroContainer.classList.remove('visible', 'fade-out');
+    }
+    if (this.centerTitleTimer) {
+      clearTimeout(this.centerTitleTimer);
+      this.centerTitleTimer = null;
+    }
+    if (this.centerTitleFadeTimer) {
+      clearTimeout(this.centerTitleFadeTimer);
+      this.centerTitleFadeTimer = null;
     }
   },
 

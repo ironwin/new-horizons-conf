@@ -54,6 +54,12 @@ let config = {
 				backgroundSizePortrait: "contain",
 				blurredBackgroundForPortrait: false,
 
+				// 4-1. 가로사진 중앙상단 일자/위치 2초간 표시 설정
+				showLandscapeHeader: true,
+				landscapeHeaderDuration: 2000,
+				landscapeHeaderTop: "30px",
+				hideImageInfoForLandscape: true,
+
 				// 5. 사진 정보 및 위치 표시 설정 (가로 사진 패널)
 				showImageInfo: true,
 				imageInfo: "mode, yearsAgo, date, location, album",
