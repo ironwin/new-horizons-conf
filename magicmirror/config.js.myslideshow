@@ -54,9 +54,9 @@ let config = {
 				backgroundSizePortrait: "contain",
 				blurredBackgroundForPortrait: false,
 
-				// 4-1. 가로사진 중앙상단 일자/위치 2초간 표시 설정
+				// 4-1. 가로사진 중앙상단 일자/위치 5초간 표시 설정
 				showLandscapeHeader: true,
-				landscapeHeaderDuration: 2000,
+				landscapeHeaderDuration: 5000,
 				landscapeHeaderTop: "30px",
 				hideImageInfoForLandscape: true,
 

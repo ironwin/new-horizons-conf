@@ -77,9 +77,9 @@ Module.register('MMM-SmartSlideshow', {
     hideImageInfoForPortrait: true,
     hideImageInfoForLandscape: true,
 
-    // 가로사진 중앙상단 헤더 설정 (2초간 표시)
+    // 가로사진 중앙상단 헤더 설정 (5초간 표시)
     showLandscapeHeader: true,
-    landscapeHeaderDuration: 2000,
+    landscapeHeaderDuration: 5000,
     landscapeHeaderTop: '30px',
     landscapeHeaderDateFormat: 'YYYY년 M월 D일',
 
@@ -409,7 +409,7 @@ Module.register('MMM-SmartSlideshow', {
     container.classList.remove('fade-out');
     container.style.display = 'flex';
 
-    const duration = (this.config.landscapeHeaderDuration || 2000);
+    const duration = (this.config.landscapeHeaderDuration || 5000);
     this.landscapeHeaderTimer = setTimeout(() => {
       container.classList.add('fade-out');
       this.landscapeHeaderFadeTimer = setTimeout(() => {

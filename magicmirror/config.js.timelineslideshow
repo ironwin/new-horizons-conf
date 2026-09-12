@@ -60,7 +60,7 @@ let config = {
 				showMonthCenterTitle: true,     // 매일 첫 번째 사진 가운데 큰 흰색 글씨 표시 (전체 크기)
 				showLandscapeDailyHeader: true, // 모든 가로사진 가운데 상단에 절반 크기 흰색 글씨 표시
 				landscapeDailyHeaderTop: "30px", // 가운데 상단 위치 (기본: 30px)
-				landscapeHeaderDuration: 2000,   // 가로사진 중앙상단 일자/위치 2초간 표시
+				landscapeHeaderDuration: 5000,   // 가로사진 중앙상단 일자/위치 5초간 표시
 
 				// 5. 세로 사진 잘림 방지 (얼굴 확대 방지)
 				autoFitPortrait: true,

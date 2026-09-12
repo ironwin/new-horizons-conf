@@ -50,8 +50,8 @@ Module.register('MMM-TimelineSlideshow', {
     // 가로사진 중앙상단 일자/위치 헤더 설정 (2초간 표시)
     showLandscapeHeader: true,
     showLandscapeDailyHeader: true,
-    landscapeHeaderDuration: 2000,
-    landscapeDailyHeaderDuration: 2000,
+    landscapeHeaderDuration: 5000,
+    landscapeDailyHeaderDuration: 5000,
     landscapeDailyHeaderTop: '30px',
     landscapeHeaderTop: '30px',
     landscapeHeaderDateFormat: 'YYYY년 M월 D일',
@@ -727,9 +727,9 @@ Module.register('MMM-TimelineSlideshow', {
     container.classList.remove('fade-out');
     container.style.display = 'flex';
 
-    // 가로사진일 때 2초간 표시 후 부드럽게 페이드아웃
+    // 가로사진일 때 5초간 표시 후 부드럽게 페이드아웃
     const duration = isLandscape
-      ? (this.config.landscapeHeaderDuration || this.config.landscapeDailyHeaderDuration || 2000)
+      ? (this.config.landscapeHeaderDuration || this.config.landscapeDailyHeaderDuration || 5000)
       : (this.config.monthCenterTitleDuration || 3000);
 
     this.centerTitleTimer = setTimeout(() => {
