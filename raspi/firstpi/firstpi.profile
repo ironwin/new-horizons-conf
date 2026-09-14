@@ -73,7 +73,7 @@ alias mydbv='mysql --table --host=0.0.0.0 --port=3306 --user=vote -pmy@raspberry
 
 alias mydbdump='mysqldump --login-path=stock --column-statistics=0 stock > stock.dump'
 
-alias cddev='cd $DEVEL_GO_HOME'
+alias cddev='cd $DEVEL_HOME'
 alias cdbin='cd $DEVEL_BIN'
 alias cdcfg='cd $DEVEL_CFG'
 alias cdlog='cd $DEVEL_LOG' 

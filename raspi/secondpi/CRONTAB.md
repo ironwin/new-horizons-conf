@@ -42,7 +42,7 @@ CRON_LOG_DIR=/home/pi/cron_log
 | 실행 시각 | 요일 | 작업 내용 | 실행 명령 | 로그 파일 |
 | :--- | :--- | :--- | :--- | :--- |
 | **07:15** | 월 ~ 금 | 매직미러 기상 루틴 반영 재시작 | `pm2 restart mm` | `mm_restart.log` |
-| **08:00** | 월 ~ 금 | 아침 외출 후 자동 시스템 종료 | `sudo shutdown -h now` | syslog |
+| **08:20** | 월 ~ 금 | 아침 외출 후 자동 시스템 종료 | `sudo shutdown -h now` | syslog |
 | **09:05** | 월 ~ 금 | 오전 화면 갱신 (휴일 재부팅 등 대비) | `pm2 restart mm` | `mm_restart.log` |
 | **10:10** | 토, 일 | 주말 오전 화면 갱신 | `pm2 restart mm` | `mm_restart.log` |
 | **20:00** | 금 | firstpi 최신 DB 덤프(stock, vote) 자동 복구 | `/home/pi/restore_backup.sh` (lock) | `restore_backup.log` |
@@ -60,7 +60,7 @@ CRON_LOG_DIR=/home/pi/cron_log
 ### 시스템 전원 자동화 (Daily Shutdown)
 전력 절감 및 SD/SSD 보호를 위해 요일별 생활 루틴에 맞춰 자동 종료합니다.
 
-* **평일 오전 종료**: `00 08 * * 1-5 sudo shutdown -h now`
+* **평일 오전 종료**: `20 08 * * 1-5 sudo shutdown -h now`
   - 월~금 출근 및 외출 후 라즈베리 파이를 자동 종료합니다.
 * **평일 야간 종료**: `55 21 * * 1-4 sudo shutdown -h now`
   - 22:00에 꺼지는 외부 스마트 플러그 전원 차단 5분 전에 OS를 안전하게 종료합니다.
@@ -113,7 +113,7 @@ CRON_LOG_DIR=/home/pi/cron_log
 ### 📅 평일 (월 ~ 목)
 ```text
 07:15 ─── [MM] 아침 화면 갱신 (pm2 restart mm)
-08:00 ─── [Power] 외출 후 자동 셧다운
+08:20 ─── [Power] 외출 후 자동 셧다운
   ... (스마트 플러그 등에 의해 낮 동안 OFF 또는 부팅 대기) ...
 20:00 ─── [MM] 저녁 OnThisDay 슬라이드쇼 전환
 21:00 ─── [Maintenance] Git 푸시 / Photo DB 백업 / 7일 보관 정리
@@ -123,7 +123,7 @@ CRON_LOG_DIR=/home/pi/cron_log
 ### 📅 금요일
 ```text
 07:15 ─── [MM] 아침 화면 갱신
-08:00 ─── [Power] 외출 후 자동 셧다운
+08:20 ─── [Power] 외출 후 자동 셧다운
 20:00 ─── [DB] firstpi 최신 DB(stock, vote) 자동 복구
 20:00 ─── [MM] 저녁 OnThisDay 슬라이드쇼 전환
 21:00 ─── [Maintenance] Git 푸시 / Photo DB 백업 / 7일 보관 정리

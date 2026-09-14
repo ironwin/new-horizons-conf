@@ -115,3 +115,9 @@ CRON_LOG_DIR=/home/pi/new-horizons/log/cron
 # Frontend Sync to secondpi (Daily 19:00, if changed)
 #####################################################################
 00 19 * * * . /home/pi/.profile; flock -n /tmp/frontend-sync.lock /home/pi/new-horizons/frontend/sync_to_secondpi.sh >> $CRON_LOG_DIR/frontend_sync.log 2>&1
+
+#####################################################################
+# Raspberry Pi Temperature Slack Alert (Every 5 minutes, threshold 60°C)
+#####################################################################
+*/5 * * * * . /home/pi/.profile; flock -n /tmp/temp-monitor.lock /home/pi/new-horizons/opt/monitoring/check_temperature.py >> $CRON_LOG_DIR/temperature_monitor.log 2>&1
+
