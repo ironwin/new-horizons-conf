@@ -1,0 +1,332 @@
+/* ============================================================
+ * 중앙 상단 디지털 시계 스타일 (Center Digital Clock)
+ * ============================================================ */
+.center-clock {
+    text-align: center;
+    margin: 0 auto 6px auto;
+    width: 380px;
+}
+
+.center-clock .digital {
+    display: inline-block;
+    text-align: center;
+}
+
+.center-clock .date {
+    font-size: 1.42rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 3px;
+    letter-spacing: 0.5px;
+    text-align: center;
+}
+
+.center-clock .time {
+    font-size: 4.05rem;
+    font-weight: 300;
+    letter-spacing: -1px;
+    line-height: 1.05;
+    color: #ffffff;
+    text-shadow: 0 0 16px rgba(255, 255, 255, 0.25);
+    text-align: center;
+}
+
+.center-clock .clock-second-digital {
+    font-size: 1.7rem;
+    vertical-align: super;
+    margin-left: 4px;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* ============================================================
+ * 가운데 오늘 일정 박스 스타일 (Today Calendar Box)
+ * ============================================================ */
+.today-calendar-box {
+    background: rgba(18, 24, 38, 0.82);
+    border: 1.5px solid rgba(255, 255, 255, 0.28);
+    border-radius: 16px;
+    padding: 12px 18px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    width: 380px;
+    min-width: 380px;
+    max-width: 380px;
+    margin: 6px auto;
+    text-align: left;
+    box-sizing: border-box;
+}
+
+.today-calendar-box header {
+    font-size: 1.65rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #4fc3f7;
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.22);
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    text-align: center;
+    text-transform: none;
+}
+
+.today-calendar-box table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 4px;
+}
+
+.today-calendar-box .event-wrapper {
+    line-height: 1.5;
+}
+
+.today-calendar-box .event-wrapper .title {
+    font-size: 1.42rem;
+    font-weight: 500;
+    color: #ffffff;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.today-calendar-box .event-wrapper .time {
+    font-size: 1.32rem;
+    font-weight: 700;
+    color: #ffd54f;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.today-calendar-box .dimmed {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 1.22rem;
+    padding: 10px 0;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* ============================================================
+ * 가운데 오늘 시간별 날씨 박스 스타일 (Today Hourly Weather Box)
+ * ============================================================ */
+.today-weather-box {
+    background: rgba(18, 24, 38, 0.82);
+    border: 1.5px solid rgba(255, 255, 255, 0.28);
+    border-radius: 16px;
+    padding: 10px 14px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    width: 380px;
+    min-width: 380px;
+    max-width: 380px;
+    margin: 6px auto;
+    text-align: left;
+    box-sizing: border-box;
+}
+
+.today-weather-box header {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #ffd54f;
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.22);
+    padding-bottom: 5px;
+    margin-bottom: 8px;
+    text-align: center;
+    text-transform: none;
+}
+
+.today-weather-box table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 2px;
+}
+
+.today-weather-box tr.hourly-row {
+    line-height: 1.45;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.today-weather-box td {
+    padding: 2px 4px;
+    vertical-align: middle;
+}
+
+.today-weather-box .day {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.88);
+    padding-right: 5px;
+}
+
+.today-weather-box .weather-icon {
+    font-size: 1.1rem;
+    text-align: center;
+    padding-right: 6px;
+    width: 24px;
+}
+
+.today-weather-box .hour-temp {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+    padding-right: 6px;
+}
+
+.today-weather-box .precip-col {
+    padding-right: 4px;
+    text-align: right;
+}
+
+.today-weather-box .precip-none {
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 0.82rem;
+}
+
+.today-weather-box .humidity-hourly {
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.today-weather-box .humidity-icon {
+    color: #81d4fa;
+    margin-left: 2px;
+}
+
+/* ============================================================
+ * 눈/비 강조 스타일 (Rain & Snow Highlights)
+ * ============================================================ */
+/* 비 강조 (Rain Highlight) */
+.today-weather-box tr.precip-rain {
+    background: linear-gradient(90deg, rgba(3, 169, 244, 0.4) 0%, rgba(33, 150, 243, 0.15) 100%);
+    box-shadow: 0 0 10px rgba(3, 169, 244, 0.45);
+    border-left: 3.5px solid #00e5ff;
+}
+
+.today-weather-box tr.precip-rain .weather-icon .rain-icon,
+.today-weather-box tr.precip-rain .weather-icon .wi {
+    color: #00e5ff !important;
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.95);
+    font-size: 1.2rem;
+}
+
+.today-weather-box .rain-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: rgba(0, 229, 255, 0.28);
+    border: 1.2px solid #00e5ff;
+    color: #ffffff;
+    padding: 1px 6px;
+    border-radius: 9px;
+    font-weight: 700;
+    font-size: 0.84rem;
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+}
+
+.today-weather-box .rain-badge .wi {
+    color: #00e5ff;
+    font-size: 0.95rem;
+}
+
+/* 눈 강조 (Snow Highlight) */
+.today-weather-box tr.precip-snow {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.4) 0%, rgba(179, 229, 252, 0.2) 100%);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+    border-left: 3.5px solid #ffffff;
+}
+
+.today-weather-box tr.precip-snow .weather-icon .snow-icon,
+.today-weather-box tr.precip-snow .weather-icon .wi {
+    color: #ffffff !important;
+    text-shadow: 0 0 12px rgba(255, 255, 255, 1);
+    font-size: 1.2rem;
+}
+
+.today-weather-box .snow-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: rgba(255, 255, 255, 0.35);
+    border: 1.2px solid #ffffff;
+    color: #ffffff;
+    padding: 1px 6px;
+    border-radius: 9px;
+    font-weight: 700;
+    font-size: 0.84rem;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+}
+
+.today-weather-box .snow-badge .wi {
+    color: #ffffff;
+    font-size: 0.95rem;
+}
+
+/* ============================================================
+ * 오른쪽 여백 예정된 일정 스타일 (Upcoming Schedule)
+ * ============================================================ */
+.upcoming-calendar,
+.MMM-AccuWeatherForecastDeluxe {
+    text-align: right;
+    width: 240px !important;
+    max-width: 240px !important;
+    margin-top: 6px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.upcoming-calendar header {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #81c784;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+    text-align: right;
+    text-transform: none;
+}
+
+.upcoming-calendar table {
+    width: 100%;
+}
+
+.upcoming-calendar td.symbol {
+    width: 16px;
+    text-align: center;
+    padding-right: 2px;
+}
+
+.upcoming-calendar td.title {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.86rem;
+}
+
+.upcoming-calendar td.time {
+    font-size: 0.8rem;
+    color: #a5d6a7;
+    white-space: nowrap;
+    text-align: right;
+    padding-left: 4px;
+}
+
+/* ============================================================
+ * 좌측 상단 영역 너비 제한 (Prevent spillover into center)
+ * ============================================================ */
+.region.top.left {
+    max-width: 250px;
+    overflow: hidden;
+}
+
+.MMM-OneCallWeather {
+    max-width: 250px !important;
+    overflow: hidden !important;
+    word-break: break-all;
+    font-size: 0.8rem;
+}
+

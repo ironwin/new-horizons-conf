@@ -31,4 +31,4 @@ else
 fi 
 
 #pm2 restart mm
-DISPLAY=:0 npm start
+DISPLAY=:0 npm run start:x11

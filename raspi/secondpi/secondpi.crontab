@@ -1,33 +1,81 @@
+# Final crontab (2026-09-14)
+# -------------------------------------------------------------------
+# [Execution Item Guide]
+# 1) Env setup
+#    - SHELL/PATH/CRON_LOG_DIR: cron 실행 환경과 공통 로그 경로 정의
+#
+# 2) Daily shutdown flow
+#    - 08:00 shutdown: 평일 아침 외출 후 자동 종료 (월~금)
+#    - 21:55 shutdown: 평일 야간 전원 차단 전 자동 종료 (월~목, 22:00 스마트 플러그 OFF 대비)
+#    - 22:00 shutdown: 주말 야간 자동 종료 (금~일)
+#
+# 3) Magic Mirror flow
+#    - 07:15, 09:05 (월~금): 기상 및 오전 루틴 반영 mm 재시작
+#    - 20:00 (매일): 슬라이드쇼 모듈 전환 재시작 (평일: OnThisDay, 주말: Timeline)
+#    - 10:10 (토~일): 주말 오전 mm 재시작
+#
+# 4) Maintenance / Backup flow
+#    - 21:00 push.git.sh: 설정 및 crontab/profile 자동 백업 & git push
+#    - 21:00 db_backup.sh: photo DB 백업 생성 (SSD-256-USB 저장)
+#    - 21:00 cleanup_backup.sh: SSD DB 백업 파일 정리 (DB별 최근 7개 유지)
+#
+# 5) Weekly DB Restore flow
+#    - 매주 금요일 20:00 restore_backup.sh: 최신 DB 덤프(stock, vote) 자동 복구
+#
+# 6) Logging policy
+#    - 표준출력/오류를 $CRON_LOG_DIR/*.log로 분리 저장
+#
+# 7) Lock policy
+#    - flock -n /tmp/*.lock 사용
+#    - 동일 작업 실행 중이면 다음 스케줄은 즉시 스킵
+# -------------------------------------------------------------------
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+CRON_LOG_DIR=/home/pi/cron_log
+
 #####################################################################
 # Daily Shutdown
 #####################################################################
-#####################################################################
-# 21:55 Daily shutdown before power plug off 22:00
-# Mon ~ Thu
-20 08 * * 1-5 sudo shutdown -h now
+# Mon ~ Fri morning shutdown (외출 후)
+00 08 * * 1-5 sudo shutdown -h now
+
+# Mon ~ Thu night shutdown (22:00 스마트 플러그 OFF 전)
 55 21 * * 1-4 sudo shutdown -h now
-# Fri ~ Sun
-#00 22 * * 5-7 sudo shutdown -h now
 
-# backup
-00 21 * * * /home/pi/new-horizons-conf/push.git.sh secondpi
+# Fri ~ Sun night shutdown
+00 22 * * 5-7 sudo shutdown -h now
 
 #####################################################################
-# magic mirror
+# Magic Mirror (pm2 restart mm)
 #####################################################################
-15 07 * * 1-5 pm2 restart mm
-05 09 * * 1-5 pm2 restart mm
-# 매일 20시 정각 실행 (평일: OnThisDay, 주말: Timeline)
-00 20 * * * pm2 restart mm
-#00 10,14,18 * * 6-7   pm2 restart mm
-10 10 * * 6-7   pm2 restart mm
+# Weekdays morning routine
+15 07 * * 1-5 pm2 restart mm >> $CRON_LOG_DIR/mm_restart.log 2>&1
+05 09 * * 1-5 pm2 restart mm >> $CRON_LOG_DIR/mm_restart.log 2>&1
 
-#####################################################################
-# Daily Cleanup
-#####################################################################
-00 21 * * * /home/pi/cleanup_backup.sh >> /home/pi/cleanup_backup.log 2>&1
+# Daily evening switch (평일: OnThisDay, 주말: Timeline)
+00 20 * * * pm2 restart mm >> $CRON_LOG_DIR/mm_restart.log 2>&1
+
+# Weekends morning
+#00 10,14,18 * * 6-7 pm2 restart mm >> $CRON_LOG_DIR/mm_restart.log 2>&1
+10 10 * * 6-7 pm2 restart mm >> $CRON_LOG_DIR/mm_restart.log 2>&1
 
 #####################################################################
 # Weekly DB Restore (Stock, Vote)
 #####################################################################
-00 20 * * 5 /home/pi/restore_backup.sh >> /home/pi/restore_backup.log 2>&1
+00 20 * * 5 flock -n /tmp/restore-backup.lock /home/pi/restore_backup.sh >> $CRON_LOG_DIR/restore_backup.log 2>&1
+
+#####################################################################
+# Daily Backup & Git Push
+#####################################################################
+00 21 * * * flock -n /tmp/push-git.lock /home/pi/new-horizons-conf/push.git.sh secondpi >> $CRON_LOG_DIR/push_git.log 2>&1
+
+#####################################################################
+# Daily DB Backup (photo)
+#####################################################################
+00 21 * * * cd /home/pi/scripts && flock -n /tmp/db-backup.lock ./db_backup.sh >> $CRON_LOG_DIR/db_backup.log 2>&1
+
+#####################################################################
+# Daily Cleanup (SSD DB Backup retention)
+#####################################################################
+00 21 * * * flock -n /tmp/cleanup-backup.lock /home/pi/cleanup_backup.sh >> $CRON_LOG_DIR/cleanup_backup.log 2>&1

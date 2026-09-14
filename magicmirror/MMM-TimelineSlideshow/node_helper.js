@@ -171,22 +171,35 @@ module.exports = NodeHelper.create({
         const parsed = JSON.parse(raw);
         return {
           lastPeriod: parsed.lastPeriod || parsed.lastYm || '',
-          lastYm: parsed.lastPeriod || parsed.lastYm || '',
-          shownPhotoIds: parsed.shownPhotoIds || {}
+          lastYm: parsed.lastPeriod || parsed.lastYm || ''
         };
       }
     } catch (err) {
       Log.warn('[MMM-TimelineSlideshow] Failed to load timeline_state.json:', err.message);
     }
-    return { lastPeriod: '', lastYm: '', shownPhotoIds: {} };
+    return { lastPeriod: '', lastYm: '' };
   },
 
   saveState(state) {
     try {
       const filePath = this.getStateFilePath();
-      fs.writeFileSync(filePath, JSON.stringify(state, null, 2), 'utf8');
+      const payload = {
+        lastPeriod: state.lastPeriod || state.lastYm || '',
+        lastYm: state.lastPeriod || state.lastYm || ''
+      };
+      fs.writeFileSync(filePath, JSON.stringify(payload, null, 2), 'utf8');
     } catch (err) {
       Log.warn('[MMM-TimelineSlideshow] Failed to save timeline_state.json:', err.message);
+    }
+  },
+
+  async recordPhotoScreened(photoId) {
+    if (!this.pool || !photoId) return;
+    try {
+      await this.pool.query('UPDATE photos SET screen_at = NOW() WHERE id = ?', [photoId]);
+      Log.info(`[MMM-TimelineSlideshow] Recorded screen_at for photo id ${photoId}`);
+    } catch (err) {
+      Log.error(`[MMM-TimelineSlideshow] Failed to update screen_at for photo id ${photoId}:`, err.message);
     }
   },
 
@@ -268,19 +281,24 @@ module.exports = NodeHelper.create({
     const sql = `
       SELECT period, id, album, filename, filepath, file_size, taken_at, date_str, time_str,
              camera_make, camera_model, lens_model, focal_length, f_number, exposure_time, iso,
-             width, height, orientation, is_portrait, has_gps, latitude, longitude, altitude, period_cnt
+             width, height, orientation, is_portrait, has_gps, latitude, longitude, altitude,
+             screen_at, rn, period_cnt
       FROM (
         SELECT ${periodExpr} as period,
                id, album, filename, filepath, file_size, taken_at, date_str, time_str,
                camera_make, camera_model, lens_model, focal_length, f_number, exposure_time, iso,
                width, height, orientation, is_portrait, has_gps, latitude, longitude, altitude,
+               screen_at,
                COUNT(*) OVER (PARTITION BY ${periodExpr}) as period_cnt,
-               ROW_NUMBER() OVER (PARTITION BY ${periodExpr} ORDER BY RAND()) as rn
+               ROW_NUMBER() OVER (
+                 PARTITION BY ${periodExpr}
+                 ORDER BY (screen_at IS NOT NULL) ASC, screen_at ASC, RAND()
+               ) as rn
         FROM photos
         WHERE taken_at IS NOT NULL ${yearFilterSql} ${excludeFilterSql} ${koreaFilterSql}
       ) sub
       WHERE period_cnt >= ? AND rn <= ?
-      ORDER BY period ${sortOrder}, taken_at ASC
+      ORDER BY period ${sortOrder}, rn ASC
     `;
 
     try {
@@ -288,9 +306,6 @@ module.exports = NodeHelper.create({
       const startTime = Date.now();
       const [rows] = await this.pool.query(sql, queryParams);
       Log.info(`[MMM-TimelineSlideshow] DB returned ${rows.length} candidate rows in ${Date.now() - startTime}ms.`);
-
-      const state = this.loadState();
-      if (!state.shownPhotoIds) state.shownPhotoIds = {};
 
       // Group by period and filter out excluded albums and locations
       const periodCandidates = new Map();
@@ -314,62 +329,25 @@ module.exports = NodeHelper.create({
         periodCandidates.get(r.period).push(r);
       }
 
-      // Pick photos avoiding recently shown ones, validating file existence on demand
+      // Pick photos prioritizing unplayed (screen_at IS NULL) and validating file existence
       const periodMap = new Map();
       for (const [period, candidates] of periodCandidates.entries()) {
         if (!candidates || candidates.length === 0) continue;
 
-        let selected = [];
-        if (avoidRecentPhotos) {
-          const seenIds = new Set(state.shownPhotoIds[period] || []);
-          const unseen = candidates.filter(c => !seenIds.has(c.id));
-          if (unseen.length >= photosPerPeriod) {
-            const valid = [];
-            for (const p of unseen) {
-              try {
-                if (fs.existsSync(p.filepath)) valid.push(p);
-              } catch {}
-              if (valid.length >= photosPerPeriod) break;
+        const selected = [];
+        for (const p of candidates) {
+          try {
+            if (fs.existsSync(p.filepath)) {
+              selected.push(p);
             }
-            if (valid.length >= photosPerPeriod) {
-              selected = valid;
-              selected.forEach(p => seenIds.add(p.id));
-              state.shownPhotoIds[period] = Array.from(seenIds);
-            }
-          }
-
-          if (selected.length === 0) {
-            const validCandidates = [];
-            for (const p of candidates) {
-              try {
-                if (fs.existsSync(p.filepath)) validCandidates.push(p);
-              } catch {}
-            }
-            const validUnseen = validCandidates.filter(c => !seenIds.has(c.id));
-            selected = [...validUnseen];
-            const needed = photosPerPeriod - selected.length;
-            const validSeen = validCandidates.filter(c => seenIds.has(c.id));
-            const additional = this.shuffleArray(validSeen).slice(0, needed);
-            selected = selected.concat(additional);
-            state.shownPhotoIds[period] = selected.map(p => p.id);
-          }
-        } else {
-          const valid = [];
-          for (const p of candidates) {
-            try {
-              if (fs.existsSync(p.filepath)) valid.push(p);
-            } catch {}
-            if (valid.length >= photosPerPeriod) break;
-          }
-          selected = valid;
+          } catch {}
+          if (selected.length >= photosPerPeriod) break;
         }
 
         if (selected.length > 0) {
           periodMap.set(period, selected);
         }
       }
-
-      this.saveState(state);
 
       // Sort or shuffle within each period if configured
       const sortedPlaylist = [];
@@ -660,6 +638,7 @@ module.exports = NodeHelper.create({
           returnPayload.countryCode = locInfo.countryCode;
           returnPayload.countryBounds = locInfo.countryBounds;
         }
+        self.recordPhotoScreened(currentItem.id);
         self.sendSocketNotification('TIMELINESLIDESHOW_FILE', returnPayload);
         self.startOrRestartTimer(currentItem);
       };

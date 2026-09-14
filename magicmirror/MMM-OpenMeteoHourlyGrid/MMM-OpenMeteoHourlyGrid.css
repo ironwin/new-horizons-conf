@@ -1,0 +1,104 @@
+.om-hourly-grid {
+    line-height: 1.25;
+    font-size: 0.94em;
+    width: 100%;
+}
+.om-wrap {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    width: 100%;
+}
+.om-grid {
+    display: grid;
+    grid-template-columns: var(--om-label-width) repeat(var(--om-cols), minmax(var(--om-col-min), 1fr));
+    gap: 0.35em 0.3em;
+    align-items: center;
+    width: 100%;
+}
+.om-cell {
+    text-align: center;
+    padding: 2px;
+}
+.om-label {
+    text-align: left;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+.om-hour-cell {
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.92em;
+}
+.om-icon-cell i {
+    font-size: var(--om-icon-size);
+}
+.om-temp-cell {
+    font-weight: 700;
+    font-size: 1.05em;
+    color: #ffffff;
+}
+
+/* Rain & Snow High-Visibility Highlights */
+.om-grid .om-cell.precip-rain {
+    color: #00e5ff !important;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.8);
+    background: rgba(0, 229, 255, 0.12);
+    border-radius: 4px;
+}
+.om-grid .om-icon-cell.precip-rain i {
+    color: #00e5ff !important;
+    text-shadow: 0 0 12px rgba(0, 229, 255, 1);
+    animation: pulse-rain 2s infinite ease-in-out;
+}
+.om-grid .om-cell.precip-snow {
+    color: #ffffff !important;
+    font-weight: 700;
+    text-shadow: 0 0 12px rgba(255, 255, 255, 1);
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+.om-grid .om-icon-cell.precip-snow i {
+    color: #ffffff !important;
+    text-shadow: 0 0 14px rgba(255, 255, 255, 1);
+    animation: pulse-snow 2s infinite ease-in-out;
+}
+
+@keyframes pulse-rain {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px #00e5ff); }
+    50% { transform: scale(1.15); filter: drop-shadow(0 0 10px #00e5ff); }
+}
+
+@keyframes pulse-snow {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 5px #ffffff); }
+    50% { transform: scale(1.15); filter: drop-shadow(0 0 12px #ffffff); }
+}
+
+
+.om-sun {
+    margin-left: 1.25em;
+}
+.om-sun-table {
+    border-collapse: collapse;
+}
+.om-sun-table td {
+    padding: 0.05em 0.35em;
+    white-space: nowrap;
+}
+.om-sun-table td:first-child {
+    text-align: left;
+}
+.om-sun-table td:last-child {
+    text-align: right;
+}
+.om-sun-title td {
+    font-weight: bold;
+    text-align: center;
+    padding-bottom: 0;
+}
+.om-sun-gap td {
+    padding: 0.3em 0;
+}

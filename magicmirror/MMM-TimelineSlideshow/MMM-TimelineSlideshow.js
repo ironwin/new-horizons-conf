@@ -69,8 +69,8 @@ Module.register('MMM-TimelineSlideshow', {
     portraitMapPosition: 'leftCenter',
     portraitMapWidth: 'auto',
     portraitMapHeight: 'auto',
-    portraitMapZoom: 6,
-    portraitMapFitCountry: true,
+    portraitMapZoom: 2.2,
+    portraitMapFitCountry: false,
     portraitMapTileTheme: 'light', // 'light' (white map), 'voyager', 'dark', 'osm'
     portraitMapApiKey: 'cb1_2sbq_1_5ce7e2903fefa17bc3ed219d',
     portraitMapHighlightCountry: true,
@@ -1499,13 +1499,23 @@ Module.register('MMM-TimelineSlideshow', {
       return;
     }
 
-    const mapWidth = Math.min(marginSide - 48, 420);
-    const mapHeight = Math.min(winHeight * 0.45, 420);
-
-    this.portraitMapContainer.style.width = `${mapWidth}px`;
-    this.portraitMapContainer.style.height = `${mapHeight}px`;
-    this.portraitMapContainer.style.left = `${(marginSide - mapWidth) / 2}px`;
-    this.portraitMapContainer.style.top = `${(winHeight - mapHeight) / 2}px`;
+    const fullMargin = this.config.portraitMapFullMargin !== false;
+    if (fullMargin) {
+      const mapWidth = Math.floor(marginSide);
+      this.portraitMapContainer.style.width = `${mapWidth}px`;
+      this.portraitMapContainer.style.height = `${winHeight}px`;
+      this.portraitMapContainer.style.left = '0px';
+      this.portraitMapContainer.style.top = '0px';
+      this.portraitMapContainer.classList.add('full-margin');
+    } else {
+      const mapWidth = Math.min(marginSide - 48, 420);
+      const mapHeight = Math.min(winHeight * 0.45, 420);
+      this.portraitMapContainer.style.width = `${mapWidth}px`;
+      this.portraitMapContainer.style.height = `${mapHeight}px`;
+      this.portraitMapContainer.style.left = `${(marginSide - mapWidth) / 2}px`;
+      this.portraitMapContainer.style.top = `${(winHeight - mapHeight) / 2}px`;
+      this.portraitMapContainer.classList.remove('full-margin');
+    }
     this.portraitMapContainer.classList.add('visible');
 
     if (this.portraitMapLocationText) {
@@ -1515,7 +1525,10 @@ Module.register('MMM-TimelineSlideshow', {
     const self = this;
     setTimeout(() => {
       self.renderLeafletMap(lat, lon);
-    }, 100);
+      if (self.leafletMap) {
+        self.leafletMap.invalidateSize();
+      }
+    }, 120);
   },
 
   renderLeafletMap(lat, lon) {
@@ -1529,13 +1542,20 @@ Module.register('MMM-TimelineSlideshow', {
     const targetLat = lat !== null && lat !== undefined ? lat : fallbackLat;
     const targetLon = lon !== null && lon !== undefined ? lon : fallbackLon;
 
+    // 맨처음 세계지도와 동일한 스케일 (기본 2.2)
+    const mapZoom = (typeof this.config.portraitMapZoom === 'number') ? this.config.portraitMapZoom : 2.2;
+    // 세계지도 구도를 자연스럽게 유지하도록 중심 위도를 조정 (-10 ~ 30)
+    const centerLat = Math.max(-10, Math.min(30, targetLat));
+
     if (!this.leafletMap) {
       this.leafletMap = L.map(this.portraitMapCanvas, {
         zoomControl: false,
         attributionControl: false,
         fadeAnimation: true,
-        zoomAnimation: true
-      }).setView([targetLat, targetLon], this.config.portraitMapZoom || 6);
+        zoomAnimation: true,
+        minZoom: 1.5,
+        maxZoom: 7
+      }).setView([centerLat, targetLon], mapZoom);
 
       const portraitTile = this.getTileLayerInfo(
         this.config.portraitMapTileTheme || 'light',
@@ -1545,9 +1565,16 @@ Module.register('MMM-TimelineSlideshow', {
         maxZoom: portraitTile.maxZoom,
         subdomains: portraitTile.subdomains
       }).addTo(this.leafletMap);
+
+      setTimeout(() => {
+        if (this.leafletMap) {
+          this.leafletMap.invalidateSize();
+          this.leafletMap.setView([centerLat, targetLon], mapZoom);
+        }
+      }, 200);
     } else {
       this.leafletMap.invalidateSize();
-      this.leafletMap.setView([targetLat, targetLon], this.config.portraitMapZoom || 6);
+      this.leafletMap.setView([centerLat, targetLon], mapZoom);
     }
 
     // Add marker
@@ -1559,8 +1586,8 @@ Module.register('MMM-TimelineSlideshow', {
     if (lat !== null && lon !== null && lat !== undefined && lon !== undefined) {
       const pulseIcon = L.divIcon({
         className: 'portrait-map-pulsing-marker',
-        iconSize: [16, 16],
-        iconAnchor: [8, 8]
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
       });
       this.leafletMarker = L.marker([lat, lon], { icon: pulseIcon }).addTo(this.leafletMap);
     }
@@ -1571,8 +1598,8 @@ Module.register('MMM-TimelineSlideshow', {
 
     if (this.currentCountryBounds && this.config.portraitMapFitCountry) {
       this.leafletMap.fitBounds(this.currentCountryBounds, {
-        padding: [24, 24],
-        maxZoom: 9,
+        padding: [30, 30],
+        maxZoom: Math.min(this.config.portraitMapMaxZoom || 2.8, 3.0),
         animate: true
       });
     }

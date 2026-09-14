@@ -80,8 +80,8 @@ let config = {
 				portraitMapPosition: "leftCenter",
 				portraitMapTileTheme: "light_nolabels",
 				portraitMapApiKey: "cb1_2sbq_1_5ce7e2903fefa17bc3ed219d",
-				portraitMapZoom: 6,
-				portraitMapFitCountry: true,
+				portraitMapZoom: 2.2,
+				portraitMapFitCountry: false,
 				portraitMapHighlightCountry: true,
 				portraitMapHighlightColor: "#ff4757",
 
