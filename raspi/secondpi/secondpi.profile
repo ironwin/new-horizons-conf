@@ -8,6 +8,16 @@
 # for ssh logins, install and configure the libpam-umask package.
 #umask 022
 
+export TABSIZE=4
+export CRED='\e[31m'
+export CGRN='\e[32m'
+export CYWL='\e[33m'
+export CMGT="\e[35m"
+export CCYN="\e[36m"
+export CWTE="\e[37m"
+export CCLR='\e[0m'
+
+
 # if running bash
 if [ -n "$BASH_VERSION" ]; then
     # include .bashrc if it exists
@@ -26,6 +36,10 @@ if [ -d "$HOME/.local/bin" ] ; then
     PATH="$HOME/.local/bin:$PATH"
 fi
 
+hname=$(hostname)
+haddr=$(hostname -I | awk '{print $1}')
+PS1="[\u@${CYWL}${hname}${CCLR}:${haddr} \W]\$ "
+
 alias ll='ls -al'
 alias monitoroff='export DISPLAY=:0; xset dpms force off'
 alias monitoron='export DISPLAY=:0; xset dpms force on'
@@ -39,7 +53,7 @@ alias mydbv='mysql --table --host=0.0.0.0 --port=3306 --user=vote -pmy@raspberry
 # Added by Antigravity CLI installer
 export PATH="/home/pi/.local/bin:$PATH"
 
-# Show system login status banner
-if [ -x "$HOME/scripts/login_status.sh" ]; then
+# Show system login status banner (interactive terminal only)
+if [ -t 1 ] && [ -x "$HOME/scripts/login_status.sh" ]; then
     "$HOME/scripts/login_status.sh"
 fi

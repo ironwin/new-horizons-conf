@@ -43,7 +43,7 @@ else
 fi
 
 # 필수 서비스 상태
-if pm2 describe mm 2>/dev/null | grep -q "status.*online"; then
+if timeout 2s pm2 describe mm 2>/dev/null | grep -q "status.*online"; then
     MM_STATUS="${C_GREEN}🟢 Online${C_RESET} (PM2 mm)"
 else
     MM_STATUS="${C_RED}🔴 Offline${C_RESET}"
