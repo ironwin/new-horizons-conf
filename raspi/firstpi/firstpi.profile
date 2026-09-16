@@ -100,3 +100,8 @@ export REPORT_TO="ironwin@ntels.com"
 
 # Added by Antigravity CLI installer
 export PATH="/home/pi/.local/bin:$PATH"
+
+# Show system login status banner
+if [ -x "$HOME/scripts/login_status.sh" ]; then
+    "$HOME/scripts/login_status.sh"
+fi
