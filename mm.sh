@@ -25,9 +25,10 @@ elif [ "${nowh}" -ge 20 ]; then
 elif [[ "${dow}" == "5" && "${nowh}" -gt 12 ]]; then
     logger "magicmirror > onthisdayslideshow (금요일 오후)"
     $csh
-# 4. 평일 주간 및 주말 이른 아침 : 기본 화면 (달력, 날씨 등)
+# 4. 평일 주간 및 주말 이른 아침 : 타임라인 슬라이드쇼 실행 (일상 모드)
 else
-    cp ./config/config.js.base ./config/config.js
+    logger "magicmirror > timelineslideshow (주간)"
+    cp /home/pi/new-horizons-conf/magicmirror/config.js.timelineslideshow ./config/config.js
 fi 
 
 #pm2 restart mm

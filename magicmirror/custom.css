@@ -42,13 +42,13 @@
  * 가운데 오늘 일정 박스 스타일 (Today Calendar Box)
  * ============================================================ */
 .today-calendar-box {
-    background: rgba(18, 24, 38, 0.82);
-    border: 1.5px solid rgba(255, 255, 255, 0.28);
+    background: rgba(10, 15, 25, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 16px;
     padding: 12px 18px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), inset 0 0 15px rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(1.5px);
+    -webkit-backdrop-filter: blur(1.5px);
     width: 380px;
     min-width: 380px;
     max-width: 380px;
@@ -67,6 +67,7 @@
     margin-bottom: 8px;
     text-align: center;
     text-transform: none;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
 }
 
 .today-calendar-box table {
@@ -87,6 +88,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
 }
 
 .today-calendar-box .event-wrapper .time {
@@ -95,27 +97,29 @@
     color: #ffd54f;
     text-align: right;
     white-space: nowrap;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
 }
 
 .today-calendar-box .dimmed {
-    color: rgba(255, 255, 255, 0.65);
+    color: rgba(255, 255, 255, 0.85);
     font-size: 1.22rem;
     padding: 10px 0;
     text-align: center;
     white-space: nowrap;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
 }
 
 /* ============================================================
  * 가운데 오늘 시간별 날씨 박스 스타일 (Today Hourly Weather Box)
  * ============================================================ */
 .today-weather-box {
-    background: rgba(18, 24, 38, 0.82);
-    border: 1.5px solid rgba(255, 255, 255, 0.28);
+    background: rgba(10, 15, 25, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 16px;
     padding: 10px 14px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), inset 0 0 15px rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(1.5px);
+    -webkit-backdrop-filter: blur(1.5px);
     width: 380px;
     min-width: 380px;
     max-width: 380px;
@@ -134,6 +138,7 @@
     margin-bottom: 8px;
     text-align: center;
     text-transform: none;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
 }
 
 .today-weather-box table {
@@ -329,4 +334,77 @@
     word-break: break-all;
     font-size: 0.8rem;
 }
+
+/* ============================================================
+ * 배경 지구본 스타일 (MMM-Globe Wallpaper Background)
+ * ============================================================ */
+.region.fullscreen.below {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+}
+
+.region.fullscreen.below .container {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.region.fullscreen.below .module.MMM-Globe {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: center;
+}
+
+.region.fullscreen.below .MMM-Globe-container {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+.region.fullscreen.below .MMM-Globe .MMM-Globe-image {
+    opacity: 0.45;
+    filter: drop-shadow(0 0 50px rgba(79, 195, 247, 0.45)) contrast(1.05) brightness(0.95);
+    transition: opacity 1s ease-in-out;
+}
+
+/* ============================================================
+ * 우측 하단 달 위상 스타일 (MMM-MoonPhase Bottom Right)
+ * ============================================================ */
+.region.bottom.right .MMM-MoonPhase {
+    text-align: right;
+    margin-bottom: 6px;
+    margin-right: 6px;
+}
+
+.region.bottom.right #moonphase-wrapper {
+    align-items: flex-end;
+}
+
+.region.bottom.right #moonphase-canvas {
+    filter: drop-shadow(0 0 16px rgba(255, 255, 230, 0.5));
+    border-radius: 50%;
+    margin-bottom: 6px;
+}
+
+.region.bottom.right #moonphase-phase {
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 0.88rem;
+    font-weight: 500;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+    text-align: right;
+}
+
 

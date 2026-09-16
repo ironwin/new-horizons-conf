@@ -38,3 +38,8 @@ alias mydbv='mysql --table --host=0.0.0.0 --port=3306 --user=vote -pmy@raspberry
 
 # Added by Antigravity CLI installer
 export PATH="/home/pi/.local/bin:$PATH"
+
+# Show system login status banner
+if [ -x "$HOME/scripts/login_status.sh" ]; then
+    "$HOME/scripts/login_status.sh"
+fi
