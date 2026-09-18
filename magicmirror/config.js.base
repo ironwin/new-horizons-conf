@@ -87,18 +87,22 @@ let config = {
 		{
 			module: "MMM-OpenMeteoHourlyGrid",
 			header: '<i class="fa fa-cloud-sun"></i> 시간별 날씨',
-			position: "top_center",
+			position: "bottom_center",
 			classes: "today-weather-box",
 			config: {
 				latitude: 37.532600,
 				longitude: 127.024612,
 				timezone: "Asia/Seoul",
-				hoursToShow: 6,
+				hoursToShow: 24,
+				forecastDays: 3,
 				showRain: true,
 				showWind: false,
 				showUv: false,
 				showSun: false,
-				compact: true
+				compact: true,
+				labelWidth: "3.6em",
+				columnMinWidth: "2.3em",
+				iconSize: "1.15em"
 			}
 		},
 		{
@@ -168,7 +172,7 @@ let config = {
 			classes: "upcoming-calendar",
 			config: {
 				excludeToday: true,
-				maxTitleLength: 12,
+				maxTitleLength: 25,
 				wrapEvents: false,
 				maximumEntries: 8,
 				broadcastPastEvents: false,
@@ -194,13 +198,16 @@ let config = {
 		},
 		{
 			module: "weather",
-			position: "bottom_left",
+			position: "top_left",
 			header: "Weather Forecast",
 			config: {
 				weatherProvider: "openmeteo",
 				type: "forecast",
 				lat: 37.532600,
 				lon: 127.024612,
+				maxNumberOfDays: 9,
+				fade: false,
+				colored: true
 			}
 		},		
 		{

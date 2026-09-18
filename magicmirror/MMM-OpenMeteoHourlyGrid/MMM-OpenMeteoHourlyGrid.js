@@ -72,7 +72,7 @@ Module.register("MMM-OpenMeteoHourlyGrid", {
 		const cols = api.hours.slice(0, this.config.hoursToShow).map((h, idx) => {
 			const c = Number(h.code || 0);
 			const isSnow = (c >= 71 && c <= 77) || (c >= 85 && c <= 86);
-			const isRain = !isSnow && ((h.pAmt && h.pAmt > 0) || (h.pProb && h.pProb >= 30) || (c >= 51 && c <= 67) || (c >= 80 && c <= 82) || c >= 95);
+			const isRain = !isSnow && ((h.pAmt != null && h.pAmt > 0) || (h.pProb != null && h.pProb >= 20) || (c >= 51 && c <= 67) || (c >= 80 && c <= 82) || c >= 95);
 
 			let rainDisplay = "—";
 			if (h.pProb != null && h.pProb > 0) {
@@ -139,6 +139,8 @@ Module.register("MMM-OpenMeteoHourlyGrid", {
 				if (r.isTemp) cls += " om-temp-cell";
 				if (c.isRain) cls += " precip-rain";
 				if (c.isSnow) cls += " precip-snow";
+				if (r.isPrecip && c.rp !== "—" && c.rp !== "0%") cls += " has-rain-prob";
+				if (r.isPrecipAmt && c.rm !== "—" && c.rm !== "0.0mm") cls += " has-rain-amt";
 				g.appendChild(this.cell(r.v(c), cls, r.h));
 			});
 		});
