@@ -1,5 +1,6 @@
 #!/bin/bash
 
+logger "this is new-horizons-conf/magicmirror/mm.sh"
 
 csh=/home/pi/new-horizons-conf/backimages.choice.sh
 dow=$(date +"%u")
