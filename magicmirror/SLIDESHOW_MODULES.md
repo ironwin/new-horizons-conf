@@ -28,7 +28,7 @@ MagicMirror² 환경에 구축된 사진 슬라이드쇼 모듈들의 상세 기
 | **`MMM-TimelineSlideshow`** | MariaDB (`photos`) | 과거 ➔ 현재 일자별 타임라인, 국내 사진 제외, `screen_at` 기반 미표시 우선, 이어보기 | ✅ **주말 (토 10시~, 일 9시~)** |
 | **`MMM-OnThisDaySlideshow`** | MariaDB + 로컬 폴더 | "과거의 오늘" 사진 우선 재생 후 로컬 폴더 무작위 재생 | ✅ **월~금 20시~, 금 13시~** |
 | **`MMM-SmartSlideshow`** | MariaDB + 로컬 폴더 | OnThisDay와 거의 같은 하이브리드 모듈 + 수동 모드 전환 | ⏸ 미사용 |
-| **`MMM-MySlideshow`** | 로컬 디렉토리 | 로컬 폴더 슬라이드쇼 + 세로사진 지도/정보 UI의 원형 | ⏸ `config.js.backimages`에서만 사용 (스케줄 미연결) |
+| **`MMM-MySlideshow`** | 로컬 디렉토리 | 최근 추가된 앨범 폴더 전체 재생 + 세로사진 지도/정보 UI의 원형 | ✅ **최근 10일 내 추가 폴더가 있을 때 OnThisDay 대신** |
 | **`MMM-BackgroundSlideshow`** | 로컬 디렉토리 | 오픈소스 원본 백그라운드 이미지 슬라이드쇼 | ⏸ 미사용 |
 
 ---
@@ -99,7 +99,7 @@ MagicMirror² 환경에 구축된 사진 슬라이드쇼 모듈들의 상세 기
 ### MMM-MySlideshow
 * **위치**: `modules/MMM-MySlideshow/`
 * **설명**: `MMM-BackgroundSlideshow`를 기반으로 로컬 이미지 디렉토리(`imagePaths`)의 사진을 보여주는 커스텀 모듈입니다. 세로 사진 비율 유지, 좌측 Leaflet 지도, 우측 메타데이터 카드 UI가 처음 만들어진 모듈입니다.
-* **사용처**: `config.js.backimages`, `config.js.myslideshow` (현재 `mm.sh` 스케줄에는 연결되지 않음). 재생 이력은 `filesShownTracker.txt`에 저장됩니다.
+* **사용처**: `config.js.backimages`. `PHOTOS/` 아래 가장 최근 폴더가 10일 이내에 추가됐으면 `backimages.choice.sh`가 OnThisDay 대신 이 설정을 적용하여, 그 폴더의 사진을 모두 한 번씩 보여줍니다 (`showAllImagesBeforeRestart: true`). 본 사진 목록은 `filesShownTracker.txt`에 저장되어 재시작 후에도 이어집니다.
 
 ---
 

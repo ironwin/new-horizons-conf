@@ -33,8 +33,8 @@ MagicMirror² 환경([`new-horizons-conf/magicmirror`](file:///home/pi/new-horiz
 | :---: | :--- | :--- | :--- |
 | ① | `dow == 7 && nowh > 8` | **일요일 09:00 이후** | `config.js.timelineslideshow` 복사 |
 | ② | `dow == 6 && nowh > 9` | **토요일 10:00 이후** | `config.js.timelineslideshow` 복사 |
-| ③ | `nowh >= 20` | **월~금 20:00 이후** (토·일은 ①②에서 먼저 걸림) | `backimages.choice.sh` 실행 → `config.js.onthisdayslideshow` 생성 |
-| ④ | `dow == 5 && nowh > 12` | **금요일 13:00 ~ 19:59** | `backimages.choice.sh` 실행 → `config.js.onthisdayslideshow` 생성 |
+| ③ | `nowh >= 20` | **월~금 20:00 이후** (토·일은 ①②에서 먼저 걸림) | `backimages.choice.sh` 실행 → 최근 10일 내 추가 폴더가 있으면 `config.js.backimages`, 없으면 `config.js.onthisdayslideshow` 생성 |
+| ④ | `dow == 5 && nowh > 12` | **금요일 13:00 ~ 19:59** | ③과 동일 |
 | ⑤ | 그 외 | 평일 20시 이전(금요일은 13시 이전), 토 10시 이전, 일 9시 이전 | `config.js.base` 복사 |
 
 ```mermaid
@@ -54,6 +54,10 @@ flowchart TD
 ### `backimages.choice.sh` 동작 (OnThisDay 사전 처리)
 1. `/media/pi/SSD-256-USB/PHOTOS/` 바로 아래 디렉토리 목록을 수집합니다 (이름에 `jwst`가 포함된 폴더 제외).
 2. 폴더 생성 시각(`stat %W`, 없으면 수정 시각) 오름차순으로 정렬합니다.
+2-1. **최근 추가 폴더 우선 재생**: 가장 최근에 생성된 폴더가 **10일 이내**(`RECENT_DAYS`, 기본 10)이면 `config.js.backimages`(`MMM-MySlideshow`)의 `@IMG_DIR@`를 그 폴더로 치환하여 적용하고 종료합니다.
+   - 하위 폴더 포함(`recursiveSubDirectories: true`), 무작위 순서로 **폴더 내 모든 사진을 한 번씩 다 보여준 뒤** 반복합니다 (`showAllImagesBeforeRestart: true`).
+   - 이미 본 사진은 `modules/MMM-MySlideshow/filesShownTracker.txt`에 기록되므로, 셧다운·재시작 후에도 안 본 사진부터 이어서 재생합니다. 전부 보면 기록을 비우고 처음부터 다시 시작합니다.
+   - 10일이 지나면 자동으로 아래 3~4단계(OnThisDay)로 돌아갑니다.
 3. **이달의 일자**(`date +%d`, 1~31)에서 1을 뺀 값을 폴더 수로 나눈 나머지를 인덱스로 사용합니다. (변수명은 `week_num`이지만 실제로는 주차가 아니라 **일자 기준**)
 4. `config.js.onthisdayslideshow`의 `@IMG_DIR@`를 선택된 폴더명으로 치환하여 `/home/pi/MagicMirror/config/config.js`에 기록합니다.
 
@@ -167,7 +171,7 @@ flowchart TD
 | `MMM-Globe` | ✅ | base | 서드파티 |
 | `MMM-MoonPhase` | ✅ | base | 서드파티 |
 | `MMM-PiTemp` | ✅ | base | 서드파티 |
-| `MMM-MySlideshow` | ⏸ | `config.js.backimages`, `config.js.myslideshow` (현재 스케줄 미사용) | 커스텀, 저장소에 소스 백업 |
+| `MMM-MySlideshow` | ✅ | `config.js.backimages` (최근 10일 내 추가 폴더가 있을 때 평일 야간·금 오후) | 커스텀, 저장소에 소스 백업 |
 | `MMM-SmartSlideshow` | ⏸ | 없음 | 커스텀, 저장소에 소스 백업 |
 | `MMM-OneCallWeather` | ⏸ | base (`disabled: true`) | 서드파티 |
 | `MMM-BackgroundSlideshow` | ⏸ | 없음 | 오픈소스 원본 |

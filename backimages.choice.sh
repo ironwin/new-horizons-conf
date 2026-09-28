@@ -6,6 +6,8 @@ FILTER="jwst"  # 필터링할 문자열(여러개라면 정규식 사용 가능)
 IMAGE_PATH="/media/pi/SSD-256-USB/PHOTOS"
 CONFIG_BASE="./magicmirror/config.js.onthisdayslideshow"
 CONFIG_LAST="/home/pi/MagicMirror/config/config.js"
+CONFIG_RECENT="./magicmirror/config.js.backimages"  # 최근 추가 폴더 전체 재생용 (MMM-MySlideshow)
+RECENT_DAYS=${RECENT_DAYS:-10}  # 가장 최근 폴더가 이 일수 이내에 추가됐으면 CONFIG_RECENT 사용
 
 
 # 1. 디렉토리 목록 생성 및 필터링
@@ -32,6 +34,18 @@ done
 
 IFS=$'\n' sorted=($(sort <<<"${dirinfo[*]}"))
 unset IFS
+
+# 2-1. 가장 최근에 추가된 폴더가 RECENT_DAYS일 이내면 MMM-MySlideshow로 해당 폴더 사진 전체 재생
+newest="${sorted[${#sorted[@]}-1]}"
+newest_btime="${newest%%|*}"
+newest_name=$(basename "${newest#*|}")
+age_days=$(( ($(date +%s) - newest_btime) / 86400 ))
+if [ "$age_days" -lt "$RECENT_DAYS" ]; then
+  echo "최근 추가 폴더: ${newest_name} (${age_days}일 전) --> backimages"
+  logger "backimages.choice > recent folder ${newest_name} (${age_days}d) : backimages"
+  sed "s/@IMG_DIR@/${newest_name}/g" "$CONFIG_RECENT" > "$CONFIG_LAST"
+  exit 0
+fi
 
 # 3. 올해의 현재 주차(0부터 시작)
 week_num=$(date +%d)

@@ -37,7 +37,9 @@ let config = {
             module: "MMM-MySlideshow",
             position: "fullscreen_below",
             config: {
-                imagePaths:['/media/pi/SSD-256-USB/PHOTOS/26.09.BALI'], // 사진 폴더 경로
+                imagePaths:['/media/pi/SSD-256-USB/PHOTOS/@IMG_DIR@'], // 사진 폴더 경로 (@IMG_DIR@는 backimages.choice.sh가 최근 추가 폴더로 치환)
+                recursiveSubDirectories: true,     // 하위 폴더 사진까지 포함
+                showAllImagesBeforeRestart: true,  // 폴더 내 모든 사진을 한 번씩 다 보여준 뒤 반복 (filesShownTracker.txt로 재시작 후에도 이어보기)
                 slideshowSpeed: 10000,             // 슬라이드 시간 (ms)
 
                 // 1. 세로 사진 잘림 방지 (얼굴 확대 방지)
