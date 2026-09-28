@@ -43,7 +43,10 @@ else
 fi
 
 # 필수 서비스 상태
-if timeout 2s pm2 describe mm 2>/dev/null | grep -q "status.*online"; then
+# PM2 데몬이 없을 때 pm2 CLI가 데몬을 새로 띄우고 timeout에 부모가 죽으면
+# 고아 데몬이 남아 부팅 시 pm2-pi.service(resurrect)가 멈추므로, 데몬이 있을 때만 조회
+if pgrep -u "$USER" -f "^PM2 v.*God Daemon" >/dev/null && \
+   timeout 2s pm2 describe mm 2>/dev/null | grep -q "status.*online"; then
     MM_STATUS="${C_GREEN}🟢 Online${C_RESET} (PM2 mm)"
 else
     MM_STATUS="${C_RED}🔴 Offline${C_RESET}"
