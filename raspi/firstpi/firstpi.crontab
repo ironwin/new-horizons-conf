@@ -11,7 +11,7 @@
 # 3) Naver stock crawling flow (weekdays)
 #    - git pull: 각 stock-crawler 실행 직전에 수행
 #    - stock-crawler: 09~15시 10분 주기 (활성)
-#    - stock-crawler --push: 현재 주석 처리(비활성)
+#    - stock-crawler --push: 평일 10~16시 매시 정각 (활성)
 #    - push 동작 분석: --push=true 이면 임계치 비교 없이 요약 메시지(summary)를 생성해 Slack 전송
 #    - 일반 동작: --push=false 이면 oper/item/threshold 조건을 통과한 종목만 요약 전송
 #    - flock: 중복 실행 방지
@@ -31,7 +31,7 @@
 #    - Weekly jwst: 매주 금요일 18:15
 #
 # 9) Daily collect report
-#    - 18:00 collection_cycle_report.sh: 수집주기별(일별/주별/월별/년별) 현황 Slack 전송
+#    - 18:00 collection_cycle_report.sh: 수집주기별(일별/주별/월별/년별) 현황 DB(stock.daily_report) 저장 + 메일 전송 (Slack 전송 없음)
 #    - Monthly population: 매월 2번째 월요일 09:00 (population.lv1 → 3일 task)
 #
 # 7) Logging policy
@@ -58,7 +58,7 @@ CRON_LOG_DIR=/home/pi/new-horizons/log/cron
 # Main crawler (run git pull before each execution)
 */10 9-15 * * 1-5 . /home/pi/.profile; cd /home/pi/new-horizons-conf && git pull >> $CRON_LOG_DIR/git_pull.log 2>&1; flock -n /tmp/stock-crawler.lock stock-crawler --conf=$DEVEL_CFG/common.conf --list=$EXTERN_CFG/crawler.list >> $CRON_LOG_DIR/stock_crawler.log 2>&1
 
-# Push mode (currently disabled): when enabled, send summary without threshold filtering
+# Push mode (active): send summary to Slack without threshold filtering
 0 10-16 * * 1-5 . /home/pi/.profile; cd /home/pi/new-horizons-conf && git pull >> $CRON_LOG_DIR/git_pull.log 2>&1; flock -n /tmp/stock-crawler-push.lock stock-crawler --push --conf=$DEVEL_CFG/common.conf --list=$EXTERN_CFG/crawler.list >> $CRON_LOG_DIR/stock_crawler_push.log 2>&1
 
 #####################################################################
@@ -108,7 +108,7 @@ CRON_LOG_DIR=/home/pi/new-horizons/log/cron
 
 #####################################################################
 #####################################################################
-# Daily Collect Report (weekdays 18:00) - 수집주기별 현황 Slack 전송
+# Daily Collect Report (weekdays 18:00) - 수집주기별 현황 DB 저장 + 메일 전송 (Slack 아님)
 00 18 * * 1-5 . /home/pi/.profile; flock -n /tmp/collection-cycle-report.lock bash /home/pi/new-horizons/go-dev.v4/report/collection_cycle_report.sh >> $CRON_LOG_DIR/collection_cycle_report.log 2>&1
 
 #####################################################################
