@@ -136,4 +136,7 @@ echo -e " • mm 로그/재시작 : ${C_BLUE}pm2 logs mm${C_RESET}  |  ${C_BLUE}
 echo -e " • 모니터 제어    : ${C_BLUE}monitoron${C_RESET}   |  ${C_BLUE}monitoroff${C_RESET}"
 echo -e " • 데이터베이스   : ${C_BLUE}mydb${C_RESET} (stock) |  ${C_BLUE}mydbv${C_RESET} (vote)  |  ${C_BLUE}mydba${C_RESET} (root)"
 echo -e " • 크론탭/로그    : ${C_BLUE}crontab -l${C_RESET}  |  ${C_BLUE}tail ~/cron_log/*.log${C_RESET}"
+echo -e " • BT 스피커 연결 : ${C_BLUE}systemctl --user start bt-speaker${C_RESET}"
+echo -e " • 사진 찍기      : ${C_BLUE}rpicam-still -o photo.jpg${C_RESET}"
+echo -e " • 영상 찍기      : ${C_BLUE}rpicam-vid -t 10000 -o video.h264${C_RESET}"
 echo -e "${C_CYAN}========================================================================${C_RESET}"
