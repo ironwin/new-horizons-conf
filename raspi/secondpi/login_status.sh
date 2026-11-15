@@ -53,6 +53,8 @@ else
 fi
 
 systemctl is-active --quiet mariadb && MARIADB_STATUS="${C_GREEN}🟢 Active${C_RESET}" || MARIADB_STATUS="${C_RED}🔴 Inactive${C_RESET}"
+systemctl --user is-active --quiet mediamtx 2>/dev/null && HOMECAM_STATUS="${C_GREEN}🟢 Running${C_RESET} (http://${IP_ADDR}:8889/cam/)" || HOMECAM_STATUS="${C_RESET}⚪ Stopped${C_RESET}"
+systemctl is-active --quiet wayvnc && VNC_STATUS="${C_GREEN}🟢 Active${C_RESET} (${IP_ADDR}:5900)" || VNC_STATUS="${C_RED}🔴 Inactive${C_RESET}"
 systemctl is-active --quiet cron && CRON_STATUS="${C_GREEN}🟢 Active${C_RESET}" || CRON_STATUS="${C_RED}🔴 Inactive${C_RESET}"
 
 # 현재 활성화된 슬라이드쇼 모듈명 추출
@@ -122,6 +124,8 @@ echo -e " • SlideShow   : ${SS_STATUS}"
 echo -e " • MariaDB     : ${MARIADB_STATUS}"
 echo -e " • Cron Daemon : ${CRON_STATUS}"
 echo -e " • SSD Mount   : ${SSD_STATUS}"
+echo -e " • Home Cam    : ${HOMECAM_STATUS}"
+echo -e " • VNC (wayvnc): ${VNC_STATUS}"
 echo ""
 echo -e " ${C_BOLD}[Crontab Schedule]${C_RESET}"
 echo -e " • Today (${DOW_NAME})   : ${C_YELLOW}${TODAY_SCHEDULE}${C_RESET}"
@@ -139,4 +143,8 @@ echo -e " • 크론탭/로그    : ${C_BLUE}crontab -l${C_RESET}  |  ${C_BLUE}t
 echo -e " • BT 스피커 연결 : ${C_BLUE}systemctl --user start bt-speaker${C_RESET}"
 echo -e " • 사진 찍기      : ${C_BLUE}rpicam-still -o photo.jpg${C_RESET}"
 echo -e " • 영상 찍기      : ${C_BLUE}rpicam-vid -t 10000 -o video.h264${C_RESET}"
+echo -e " • 홈캠 켜기/끄기 : ${C_BLUE}systemctl --user start mediamtx${C_RESET}  |  ${C_BLUE}systemctl --user stop mediamtx${C_RESET}"
+echo -e " • 매직미러로 홈캠: ${C_BLUE}~/scripts/homecam_mm.sh${C_RESET} (켜기)  |  ${C_BLUE}~/scripts/homecam_mm.sh off${C_RESET}  |  ${C_BLUE}~/scripts/homecam_mm.sh 60${C_RESET} (60초만)"
+echo -e " • 홈캠 보기      : ${C_BLUE}http://${IP_ADDR}:8889/cam/${C_RESET} (id: cam, pw: ~/mediamtx/cam_password.txt)"
+echo -e " • VNC 원격화면   : ${C_BLUE}RealVNC Viewer → ${IP_ADDR}:5900${C_RESET} (pi 계정 로그인 비밀번호)  |  재시작: ${C_BLUE}sudo systemctl restart wayvnc${C_RESET}"
 echo -e "${C_CYAN}========================================================================${C_RESET}"
